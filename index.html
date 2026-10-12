@@ -19,7 +19,8 @@
     -webkit-font-smoothing: antialiased; overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
   }
-  .app { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 18px; }
+  .app { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px; }
+
   .layout { display: flex; align-items: flex-start; gap: 18px; }
   .side { display: flex; flex-direction: column; gap: 14px; width: 148px; }
   .panel {
@@ -40,6 +41,43 @@
     font-size: 18px; font-variant-numeric: tabular-nums; font-weight: 700;
     color: #eef2fb; text-shadow: 0 0 14px rgba(120,170,255,0.45);
   }
+
+  /* ================= 消息面板（放在左侧栏，分数下方） ================= */
+  .message-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 62px;
+    padding: 10px 8px;
+    overflow: hidden;
+  }
+  .message-text {
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    line-height: 1.15;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(4px) scale(0.94);
+    transition: opacity .18s ease, transform .24s cubic-bezier(0.22, 1.2, 0.36, 1);
+    background: linear-gradient(135deg, #7dd3fc, #a78bfa 60%, #f472b6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
+    white-space: nowrap;
+  }
+  .message-text.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  /* 不同消行档次的配色 */
+  .message-text.single  { background: linear-gradient(135deg, #6ee7b7, #34d399); -webkit-background-clip: text; background-clip: text; text-shadow: 0 0 16px rgba(52,211,153,0.55); }
+  .message-text.double  { background: linear-gradient(135deg, #7dd3fc, #3b82f6); -webkit-background-clip: text; background-clip: text; text-shadow: 0 0 16px rgba(59,130,246,0.55); }
+  .message-text.triple  { background: linear-gradient(135deg, #c084fc, #a855f7); -webkit-background-clip: text; background-clip: text; text-shadow: 0 0 18px rgba(168,85,247,0.6); }
+  .message-text.tetris  { background: linear-gradient(135deg, #fde047, #f59e0b 45%, #f472b6); -webkit-background-clip: text; background-clip: text; text-shadow: 0 0 22px rgba(245,158,11,0.7); font-size: 15px; }
+  .message-text.tspin   { background: linear-gradient(135deg, #e9d5ff, #c084fc 50%, #f472b6); -webkit-background-clip: text; background-clip: text; text-shadow: 0 0 20px rgba(192,132,252,0.7); }
+
   .board-wrap {
     position: relative; padding: 8px; border-radius: 18px;
     background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.012));
@@ -53,7 +91,7 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 16px; background: rgba(10,12,18,0.74);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    opacity: 0; visibility: hidden; transition: opacity .34s ease, visibility .34s ease; z-index: 5;
+    opacity: 0; visibility: hidden; transition: opacity .3s ease, visibility .3s ease; z-index: 5;
   }
   .overlay.show { opacity: 1; visibility: visible; }
   .over-title {
@@ -67,6 +105,12 @@
     font-variant-numeric: tabular-nums; color: #ffffff;
     text-shadow: 0 0 20px rgba(125,211,252,0.65);
   }
+  .pause-overlay { background: rgba(10,12,18,0.82); }
+  .pause-overlay .over-title {
+    background: linear-gradient(135deg, #a5b4fc, #c084fc 55%, #7dd3fc);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
   button {
     padding: 11px 30px; border: none; border-radius: 11px;
     font-family: inherit; font-size: 14.5px; font-weight: 700;
@@ -77,6 +121,7 @@
   }
   button:hover { transform: translateY(-2px); box-shadow: 0 13px 30px rgba(56,189,248,0.55); filter: brightness(1.07); }
   button:active { transform: translateY(0) scale(.97); }
+
   .hint { font-size: 12px; letter-spacing: 0.07em; color: #6d768d; text-align: center; line-height: 1.9; }
   .hint kbd {
     display: inline-block; padding: 1px 6px; margin: 0 1px; border-radius: 5px;
@@ -88,14 +133,9 @@
   /* ================= 左上角浮动「重开」按钮 ================= */
   .restart-fab {
     position: fixed;
-    top: 14px;
-    left: 14px;
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    top: 14px; left: 14px;
+    width: 44px; height: 44px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
     border-radius: 50%;
     border: 1px solid rgba(255,255,255,0.14);
     background: linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
@@ -103,8 +143,7 @@
     cursor: pointer;
     z-index: 100;
     box-shadow: 0 6px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     transition: transform .22s ease, color .18s ease, background .18s ease, box-shadow .22s ease;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
@@ -117,6 +156,45 @@
     transform: rotate(-35deg);
   }
   .restart-fab:active { transform: scale(0.92) rotate(-35deg); }
+
+  /* ================= 右上角浮动「暂停」按钮 ================= */
+  .pause-fab {
+    position: fixed;
+    top: 14px; right: 14px;
+    width: 44px; height: 44px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+    color: #cfd8e8;
+    cursor: pointer;
+    z-index: 100;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: transform .2s ease, color .18s ease, background .18s ease, box-shadow .2s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .pause-fab svg { width: 20px; height: 20px; display: block; }
+  /* 暂停图标 / 播放图标 通过 active 类切换 */
+  .pause-fab .icon-play { display: none; }
+  .pause-fab.active .icon-pause { display: none; }
+  .pause-fab.active .icon-play { display: block; }
+
+  .pause-fab:hover {
+    color: #ffffff;
+    background: linear-gradient(160deg, rgba(125,211,252,0.30), rgba(99,102,241,0.22));
+    box-shadow: 0 8px 24px rgba(56,189,248,0.45), inset 0 1px 0 rgba(255,255,255,0.16);
+  }
+  .pause-fab:active { transform: scale(0.92); }
+
+  /* 暂停状态：暖金色高亮 */
+  .pause-fab.active {
+    color: #fff7ed;
+    background: linear-gradient(160deg, rgba(251,191,36,0.32), rgba(245,158,11,0.22));
+    border-color: rgba(251,191,36,0.35);
+    box-shadow: 0 8px 26px rgba(251,191,36,0.45), inset 0 1px 0 rgba(255,255,255,0.16);
+  }
 
   /* ================= 屏幕按钮区 ================= */
   .controls {
@@ -131,37 +209,25 @@
     border: 1px solid rgba(255,255,255,0.07);
     box-shadow: 0 10px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
   }
-
   .ctrl-group {
-    display: flex;
-    gap: 6px;
-    align-items: stretch;
-    padding: 5px;
-    border-radius: 11px;
+    display: flex; gap: 6px; align-items: stretch;
+    padding: 5px; border-radius: 11px;
     background: rgba(255,255,255,0.025);
     border: 1px solid rgba(255,255,255,0.05);
   }
-
   .ctrl-btn {
-    width: 52px;
-    height: 52px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 52px; height: 52px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
     line-height: 1;
     border: 1px solid rgba(255,255,255,0.12);
     border-radius: 10px;
     background: linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
     color: #e8ecf5;
-    font-family: inherit;
-    font-size: 20px;
-    font-weight: 700;
+    font-family: inherit; font-size: 20px; font-weight: 700;
     cursor: pointer;
     box-shadow: 0 3px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.09);
     transition: transform .1s ease, background .12s ease, box-shadow .12s ease, color .12s ease;
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none; -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
@@ -173,27 +239,22 @@
     color: #ffffff;
   }
   .ctrl-btn.small { width: auto; min-width: 64px; padding: 0 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; }
-  .ctrl-btn.wide  { min-width: 88px; }
+  .ctrl-btn.wide  { min-width: 110px; }
 
   /* ============================================================
      手机端适配（竖屏）
      ============================================================ */
   @media (max-width: 700px) {
     .app {
-      /* 顶部留出 58px 给浮动重开按钮 */
       padding: 58px 8px 6px;
       gap: 6px;
       min-height: 100vh;
       justify-content: flex-start;
     }
-
-    .restart-fab {
-      width: 46px;
-      height: 46px;
-      top: 8px;
-      left: 10px;
-    }
+    .restart-fab { width: 46px; height: 46px; top: 8px; left: 10px; }
     .restart-fab svg { width: 22px; height: 22px; }
+    .pause-fab   { width: 46px; height: 46px; top: 8px; right: 10px; }
+    .pause-fab svg { width: 21px; height: 21px; }
 
     .layout {
       flex-direction: column;
@@ -201,7 +262,6 @@
       gap: 6px;
       width: 100%;
     }
-
     .side {
       flex-direction: row;
       width: 100%;
@@ -210,7 +270,6 @@
       justify-content: center;
       align-items: stretch;
     }
-
     .side.left { order: 0; }
     .side.right { order: 2; }
     .board-wrap { order: 1; }
@@ -232,6 +291,19 @@
     .stat span { font-size: 8px; letter-spacing: 0.1em; }
     .stat b { font-size: 15px; }
 
+    /* 消息面板在手机端：横条右侧，占剩余宽度 */
+    .message-panel {
+      flex: 1;
+      min-width: 0;
+      min-height: 44px;
+      padding: 6px 8px;
+    }
+    .message-text {
+      font-size: 12px;
+      letter-spacing: 0.04em;
+    }
+    .message-text.tetris { font-size: 14px; }
+
     .board-wrap { padding: 6px; border-radius: 14px; }
     #boardCanvas { border-radius: 9px; }
 
@@ -244,13 +316,12 @@
     }
     .ctrl-group { gap: 5px; padding: 4px; }
     .ctrl-btn {
-      width: 50px;
-      height: 50px;
+      width: 50px; height: 50px;
       font-size: 19px;
       border-radius: 9px;
     }
     .ctrl-btn.small { min-width: 58px; font-size: 12px; padding: 0 10px; }
-    .ctrl-btn.wide { min-width: 96px; }
+    .ctrl-btn.wide  { min-width: 120px; }
 
     .hint { display: none; }
   }
@@ -258,12 +329,15 @@
   @media (max-width: 380px) {
     .app { padding: 54px 6px 4px; gap: 4px; }
     .restart-fab { width: 42px; height: 42px; top: 6px; left: 8px; }
+    .pause-fab   { width: 42px; height: 42px; top: 6px; right: 8px; }
     .panel { padding: 5px 8px; }
     .ctrl-btn { width: 46px; height: 46px; font-size: 17px; }
     .ctrl-btn.small { min-width: 52px; font-size: 11px; }
-    .ctrl-btn.wide { min-width: 84px; }
+    .ctrl-btn.wide  { min-width: 108px; }
     .controls { gap: 4px; padding: 4px; }
     .ctrl-group { gap: 4px; padding: 3px; }
+    .message-text { font-size: 11px; }
+    .message-text.tetris { font-size: 13px; }
   }
 </style>
 </head>
@@ -278,6 +352,17 @@
   </svg>
 </button>
 
+<!-- 右上角浮动暂停按钮 -->
+<button class="pause-fab" id="pauseFab" title="暂停 / 继续" aria-label="暂停或继续">
+  <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor">
+    <rect x="6.5" y="5" width="4" height="14" rx="1.2"/>
+    <rect x="13.5" y="5" width="4" height="14" rx="1.2"/>
+  </svg>
+  <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M7 5.2 L19 12 L7 18.8 Z"/>
+  </svg>
+</button>
+
 <div class="app">
   <div class="layout">
     <aside class="side left">
@@ -286,6 +371,10 @@
         <div class="stat"><span>SCORE</span><b id="scoreEl">0</b></div>
         <div class="stat"><span>BEST</span><b id="bestEl">0</b></div>
       </div>
+      <!-- 消息面板：位于分数下方 -->
+      <div class="panel message-panel">
+        <span class="message-text" id="messageText"></span>
+      </div>
     </aside>
     <main class="board-wrap">
       <canvas id="boardCanvas"></canvas>
@@ -293,6 +382,10 @@
         <div class="over-title">GAME OVER</div>
         <div class="over-score">本局得分 <b id="finalScore">0</b></div>
         <button id="restartBtn">再来一局</button>
+      </div>
+      <div class="overlay pause-overlay" id="pauseOverlay">
+        <div class="over-title">PAUSED</div>
+        <button id="resumeBtn">继续</button>
       </div>
     </main>
     <aside class="side right">
@@ -321,14 +414,14 @@
   </div>
 
   <div class="hint">
-    <kbd>←</kbd><kbd>→</kbd> 移动 · <kbd>↓</kbd> 软降 · <kbd>空格</kbd> 硬降 · <kbd>C</kbd> 暂存 · <kbd>R</kbd> 重开<br>
+    <kbd>←</kbd><kbd>→</kbd> 移动 · <kbd>↓</kbd> 软降 · <kbd>空格</kbd> 硬降 · <kbd>C</kbd> 暂存 · <kbd>P</kbd>/<kbd>Esc</kbd> 暂停 · <kbd>R</kbd> 重开<br>
     <span class="highlight">旋转：<kbd>↑</kbd>/<kbd>X</kbd> 顺时针 · <kbd>Z</kbd>/<kbd>Ctrl</kbd> 逆时针</span>
   </div>
 </div>
 
 <script>
 /* =========================================================================
- *  俄罗斯方块 Tetris — 手机适配 + 左上角重开按钮
+ *  俄罗斯方块 Tetris — 消息外置（左侧栏）+ 暂停浮动按钮（右上角）
  * ========================================================================= */
 
 const COLS = 10;
@@ -339,6 +432,7 @@ const CLEAR_DURATION = 340;
 const DAS = 150, ARR = 45, SOFT_INTERVAL = 45;
 const LOCK_DELAY = 500;
 const MAX_LOCK_RESETS = 15;
+const MESSAGE_DURATION = 900;
 
 const SHAPES = {
   I: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
@@ -641,29 +735,6 @@ function drawClearingCell(x, y, type, p) {
   boardCtx.restore();
 }
 
-function drawTSpinMessage(now) {
-  const msg = state.tspinMessage; if (!msg) return;
-  const elapsed = now - msg.start; const DURATION = 1100;
-  if (elapsed >= DURATION) { state.tspinMessage = null; return; }
-  let alpha = 1;
-  if (elapsed < 180) alpha = elapsed / 180;
-  else if (elapsed > DURATION - 300) alpha = (DURATION - elapsed) / 300;
-  alpha = Math.max(0, Math.min(1, alpha));
-  const rise = Math.min(46, elapsed * 0.055);
-  const cx = COLS * BLOCK / 2, cy = ROWS * BLOCK / 2 - 10 - rise;
-  const scale = 1 + (1 - Math.min(1, elapsed / 220)) * 0.22;
-  boardCtx.save();
-  boardCtx.globalAlpha = alpha; boardCtx.textAlign = 'center'; boardCtx.textBaseline = 'middle';
-  boardCtx.translate(cx, cy); boardCtx.scale(scale, scale);
-  boardCtx.font = 'bold 24px "Segoe UI", system-ui, sans-serif';
-  boardCtx.shadowColor = '#c084fc'; boardCtx.shadowBlur = 26;
-  const grad = boardCtx.createLinearGradient(-110, -14, 110, 14);
-  grad.addColorStop(0, '#7dd3fc'); grad.addColorStop(0.5, '#e9d5ff'); grad.addColorStop(1, '#f472b6');
-  boardCtx.fillStyle = grad;
-  boardCtx.fillText(msg.text, 0, 0); boardCtx.fillText(msg.text, 0, 0);
-  boardCtx.restore();
-}
-
 function renderBoard(now) {
   const W = COLS * BLOCK, H = ROWS * BLOCK;
   boardCtx.clearRect(0, 0, W, H);
@@ -687,11 +758,13 @@ function renderBoard(now) {
   }
   const p = state.current;
   if (!state.clearing && p && !state.gameOver) {
-    let gy = p.y;
-    while (!collide(p.matrix, p.x, gy + 1)) gy++;
-    for (let y = 0; y < p.matrix.length; y++) {
-      for (let x = 0; x < p.matrix.length; x++) {
-        if (p.matrix[y][x]) drawGhostCell(p.type, (p.x + x) * BLOCK, (gy + y) * BLOCK);
+    if (!state.paused) {
+      let gy = p.y;
+      while (!collide(p.matrix, p.x, gy + 1)) gy++;
+      for (let y = 0; y < p.matrix.length; y++) {
+        for (let x = 0; x < p.matrix.length; x++) {
+          if (p.matrix[y][x]) drawGhostCell(p.type, (p.x + x) * BLOCK, (gy + y) * BLOCK);
+        }
       }
     }
     for (let y = 0; y < p.matrix.length; y++) {
@@ -700,7 +773,6 @@ function renderBoard(now) {
       }
     }
   }
-  drawTSpinMessage(now);
 }
 
 function drawMiniCell(ctx, x, y, size, c1, c2) {
@@ -743,6 +815,42 @@ function renderMini(ctx, w, h, types, cell) {
 function renderNext() { renderMini(nextCtx, NEXT_W, NEXT_H, state.queue.slice(0, 3), 16); }
 function renderHold() { renderMini(holdCtx, HOLD_W, HOLD_H, state.hold ? [state.hold] : [], 20); }
 
+/* ============================ 消息显示（左侧栏） ============================ */
+
+const messageText = document.getElementById('messageText');
+let messageTimer = null;
+
+function showMessage(text, variant) {
+  if (!messageText) return;
+  if (messageTimer) { clearTimeout(messageTimer); messageTimer = null; }
+  messageText.className = 'message-text';
+  void messageText.offsetWidth;     // 强制重排，动画重播
+  messageText.textContent = text;
+  if (variant) messageText.classList.add(variant);
+  messageText.classList.add('show');
+  messageTimer = setTimeout(() => {
+    messageText.classList.remove('show');
+  }, MESSAGE_DURATION);
+}
+
+function showLineMessage(n) {
+  switch (n) {
+    case 1: showMessage('SINGLE', 'single'); break;
+    case 2: showMessage('DOUBLE', 'double'); break;
+    case 3: showMessage('TRIPLE', 'triple'); break;
+    case 4: showMessage('TETRIS', 'tetris'); break;
+  }
+}
+
+function showTSpinMessage(n) {
+  const text =
+    n === 0 ? 'T-SPIN' :
+    n === 1 ? 'T-SPIN SINGLE' :
+    n === 2 ? 'T-SPIN DOUBLE' :
+    n === 3 ? 'T-SPIN TRIPLE' : 'T-SPIN';
+  showMessage(text, 'tspin');
+}
+
 /* ============================ 游戏逻辑 ============================ */
 
 const state = {
@@ -750,8 +858,9 @@ const state = {
   score: 0, best: 0, lines: 0, level: 1,
   dropInterval: 1000, dropTimer: 0,
   clearing: null, gameOver: false, started: false,
-  lastActionWasRotation: false, tspinPending: false, tspinMessage: null,
+  lastActionWasRotation: false, tspinPending: false,
   grounded: false, lockTimer: 0, lockResets: 0,
+  paused: false,
 };
 
 let bag = [];
@@ -816,19 +925,18 @@ function checkTSpin(piece) {
   return occupied >= 3;
 }
 
-function tspinText(n) {
-  return n === 0 ? 'T-SPIN' : n === 1 ? 'T-SPIN SINGLE' : n === 2 ? 'T-SPIN DOUBLE' : n === 3 ? 'T-SPIN TRIPLE' : 'T-SPIN';
-}
-
 /* -------- UI -------- */
 const scoreEl = document.getElementById('scoreEl');
 const bestEl = document.getElementById('bestEl');
 const linesEl = document.getElementById('linesEl');
 const levelEl = document.getElementById('levelEl');
 const overlay = document.getElementById('overlay');
+const pauseOverlay = document.getElementById('pauseOverlay');
 const finalScoreEl = document.getElementById('finalScore');
 const restartBtn = document.getElementById('restartBtn');
+const resumeBtn = document.getElementById('resumeBtn');
 const restartFab = document.getElementById('restartFab');
+const pauseFab = document.getElementById('pauseFab');
 
 function updateUI() {
   scoreEl.textContent = state.score;
@@ -853,11 +961,37 @@ function resetLockDelay() {
   }
 }
 
+/* -------- 暂停 / 继续 -------- */
+
+function pauseGame() {
+  if (state.paused || state.gameOver) return;
+  state.paused = true;
+  pauseOverlay.classList.add('show');
+  pauseFab.classList.add('active');
+  keys.left = keys.right = keys.down = false;
+  repeat.left = { held: false, timer: 0, fired: false };
+  repeat.right = { held: false, timer: 0, fired: false };
+  repeat.down = { held: false, timer: 0 };
+}
+
+function resumeGame() {
+  if (!state.paused) return;
+  state.paused = false;
+  pauseOverlay.classList.remove('show');
+  pauseFab.classList.remove('active');
+  lastTime = performance.now();
+}
+
+function togglePause() {
+  if (state.paused) resumeGame();
+  else pauseGame();
+}
+
 /* -------- 核心操作 -------- */
 
 function move(dir) {
   const p = state.current;
-  if (!p || state.clearing || state.gameOver) return false;
+  if (!p || state.paused || state.clearing || state.gameOver) return false;
   if (!collide(p.matrix, p.x + dir, p.y)) {
     p.x += dir;
     state.lastActionWasRotation = false;
@@ -869,7 +1003,7 @@ function move(dir) {
 
 function rotate(dir) {
   const p = state.current;
-  if (!p || state.clearing || state.gameOver) return false;
+  if (!p || state.paused || state.clearing || state.gameOver) return false;
   if (p.type === 'O') return false;
 
   const from = p.rot;
@@ -916,7 +1050,7 @@ function stepDown(soft) {
 
 function hardDrop() {
   const p = state.current;
-  if (!p || state.clearing || state.gameOver) return;
+  if (!p || state.paused || state.clearing || state.gameOver) return;
   let dist = 0;
   while (!collide(p.matrix, p.x, p.y + 1)) { p.y++; dist++; }
   addScore(dist * 2);
@@ -926,7 +1060,7 @@ function hardDrop() {
 }
 
 function doHold() {
-  if (state.gameOver || state.clearing) return;
+  if (state.paused || state.gameOver || state.clearing) return;
   if (!state.current || !state.canHold) return;
   const curType = state.current.type;
   if (state.hold) {
@@ -977,7 +1111,7 @@ function lockPiece() {
     playTSpinSound();
     if (fullRows.length === 0) {
       addScore(TSPIN_NO_LINE);
-      state.tspinMessage = { text: tspinText(0), start: performance.now() };
+      showTSpinMessage(0);
       spawnNext();
     } else {
       state.tspinPending = true;
@@ -989,6 +1123,9 @@ function lockPiece() {
   if (fullRows.length) {
     state.clearing = { rows: fullRows, start: performance.now() };
     playClearSound(fullRows.length);
+    setTimeout(() => {
+      if (!state.gameOver) showLineMessage(fullRows.length);
+    }, 80);
   } else spawnNext();
 }
 
@@ -1004,8 +1141,10 @@ function finishClearing() {
   const n = rows.length;
   if (isTSpin) {
     addScore(TSPIN_SCORES[n] || 0);
-    state.tspinMessage = { text: tspinText(n), start: performance.now() };
-  } else addScore(LINE_SCORES[n] || 0);
+    showTSpinMessage(n);
+  } else {
+    addScore(LINE_SCORES[n] || 0);
+  }
   state.lines += n;
   const newLevel = Math.floor(state.lines / 10) + 1;
   if (newLevel !== state.level) {
@@ -1034,6 +1173,9 @@ function spawnNext() {
 function triggerGameOver() {
   if (state.gameOver) return;
   state.gameOver = true; state.current = null;
+  state.paused = false;
+  pauseOverlay.classList.remove('show');
+  pauseFab.classList.remove('active');
   finalScoreEl.textContent = state.score;
   overlay.classList.add('show');
 }
@@ -1046,16 +1188,21 @@ function restart() {
   state.clearing = null; state.gameOver = false; state.started = true;
   state.lastActionWasRotation = false;
   state.tspinPending = false;
-  state.tspinMessage = null;
   state.grounded = false;
   state.lockTimer = 0;
   state.lockResets = 0;
+  state.paused = false;
   bag = []; refillQueue();
   keys.left = keys.right = keys.down = false;
   repeat.left = { held: false, timer: 0, fired: false };
   repeat.right = { held: false, timer: 0, fired: false };
   repeat.down = { held: false, timer: 0 };
   overlay.classList.remove('show');
+  pauseOverlay.classList.remove('show');
+  pauseFab.classList.remove('active');
+  if (messageTimer) { clearTimeout(messageTimer); messageTimer = null; }
+  messageText.classList.remove('show');
+  messageText.textContent = '';
   updateUI(); renderHold();
   spawnNext();
   lastTime = performance.now();
@@ -1071,7 +1218,7 @@ const repeat = {
 };
 
 function updateInput(dt) {
-  if (state.gameOver || state.clearing) return;
+  if (state.paused || state.gameOver || state.clearing) return;
   ['left', 'right'].forEach((dir) => {
     const r = repeat[dir], step = dir === 'left' ? -1 : 1;
     if (!keys[dir]) { r.held = false; r.fired = false; r.timer = 0; return; }
@@ -1094,6 +1241,8 @@ function updateInput(dt) {
 function pressKey(code) {
   if (!code) return;
   if (code === 'KeyR') { restart(); return; }
+  if (code === 'KeyP' || code === 'Escape') { togglePause(); return; }
+  if (state.paused) return;
   if (state.gameOver) return;
 
   switch (code) {
@@ -1127,7 +1276,7 @@ function releaseKey(code) {
 
 function handleKeyDown(e) {
   const code = e.code;
-  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyC','KeyX','KeyZ'].indexOf(code) !== -1) {
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyC','KeyX','KeyZ','KeyP','Escape'].indexOf(code) !== -1) {
     e.preventDefault();
   }
   if (e.repeat) return;
@@ -1181,21 +1330,21 @@ function resize() {
     const vh = window.innerHeight;
     const vw = window.innerWidth;
 
-    const topBar = 92;        // Hold / Score 横条
-    const bottomBar = 92;     // Next / Lines 横条
-    const controlsH = 130;    // 底部按钮区
-    const margins = 40;       // 页面 padding + 间距
-    const fabSpace = 50;      // 顶部浮动重开按钮占用的额外空间（padding-top 增加量）
+    // 顶部横条、底部横条、按钮区、页面边距、浮动按钮留白
+    const topBar = 96;      // 含消息面板在内
+    const bottomBar = 92;
+    const controlsH = 130;
+    const margins = 40;
+    const fabSpace = 50;
 
     const reserved = topBar + bottomBar + controlsH + margins + fabSpace;
     const availableH = vh - reserved;
     const availableW = vw - 24;
 
-    // 棋盘宽高比 10:20 = 1:2
     let boardH = Math.min(availableH, availableW * 2);
     let boardW = boardH / 2;
 
-    if (boardH < 300) { boardH = 300; boardW = 150; }
+    if (boardH < 280) { boardH = 280; boardW = 140; }
 
     boardCanvas.style.width = boardW + 'px';
     boardCanvas.style.height = boardH + 'px';
@@ -1228,27 +1377,30 @@ function loop(now) {
   let dt = now - lastTime; lastTime = now;
   if (dt > 100) dt = 100;
 
-  if (state.clearing) {
-    if (now - state.clearing.start >= CLEAR_DURATION) finishClearing();
-  } else if (state.started && !state.gameOver) {
-    updateInput(dt);
+  if (!state.paused) {
+    if (state.clearing) {
+      if (now - state.clearing.start >= CLEAR_DURATION) finishClearing();
+    } else if (state.started && !state.gameOver) {
+      updateInput(dt);
 
-    if (state.current) {
-      if (state.grounded && state.lockTimer > 0) {
-        state.lockTimer -= dt;
-        if (state.lockTimer <= 0) {
-          state.lockTimer = 0;
-          lockPiece();
-        }
-      } else {
-        state.dropTimer += dt;
-        if (state.dropTimer >= state.dropInterval) {
-          state.dropTimer = 0;
-          stepDown(false);
+      if (state.current) {
+        if (state.grounded && state.lockTimer > 0) {
+          state.lockTimer -= dt;
+          if (state.lockTimer <= 0) {
+            state.lockTimer = 0;
+            lockPiece();
+          }
+        } else {
+          state.dropTimer += dt;
+          if (state.dropTimer >= state.dropInterval) {
+            state.dropTimer = 0;
+            stepDown(false);
+          }
         }
       }
     }
   }
+
   renderBoard(now);
 }
 
@@ -1272,9 +1424,10 @@ function init() {
 window.addEventListener('pointerdown', getAudioCtx, { once: true });
 window.addEventListener('keydown', getAudioCtx, { once: true });
 
-// 左上角浮动按钮 & 结算弹窗的「再来一局」都触发重开
 restartFab.addEventListener('click', () => { getAudioCtx(); restart(); });
 restartBtn.addEventListener('click', () => { getAudioCtx(); restart(); });
+resumeBtn.addEventListener('click', () => { getAudioCtx(); resumeGame(); });
+pauseFab.addEventListener('click', () => { getAudioCtx(); togglePause(); });
 
 init();
 </script>
