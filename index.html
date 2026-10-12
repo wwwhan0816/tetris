@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>俄罗斯方块 · Tetris</title>
 <style>
   * { box-sizing: border-box; }
@@ -15,9 +15,11 @@
       radial-gradient(900px 560px at 102% 104%, rgba(56,189,248,0.14), transparent 60%),
       linear-gradient(160deg, #242833 0%, #1a1d25 55%, #15171d 100%);
     font-family: "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-    color: #e8ecf5; user-select: none; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+    color: #e8ecf5; user-select: none; -webkit-user-select: none;
+    -webkit-font-smoothing: antialiased; overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
   }
-  .app { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 22px; }
+  .app { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 18px; }
   .layout { display: flex; align-items: flex-start; gap: 18px; }
   .side { display: flex; flex-direction: column; gap: 14px; width: 148px; }
   .panel {
@@ -82,6 +84,84 @@
     background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
   }
   .hint .highlight { color: #a78bfa; font-weight: 700; }
+
+  /* ================= 屏幕按钮区 ================= */
+  .controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    padding: 8px;
+    border-radius: 16px;
+    background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.07);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .ctrl-group {
+    display: flex;
+    gap: 6px;
+    align-items: stretch;
+    padding: 5px;
+    border-radius: 11px;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .ctrl-btn {
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    background: linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+    color: #e8ecf5;
+    font-family: inherit;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.09);
+    transition: transform .1s ease, background .12s ease, box-shadow .12s ease, color .12s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .ctrl-btn:hover {
+    background: linear-gradient(160deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05));
+    color: #ffffff;
+  }
+
+  .ctrl-btn:active,
+  .ctrl-btn.pressed {
+    transform: scale(0.92);
+    background: linear-gradient(160deg, rgba(125,211,252,0.35), rgba(99,102,241,0.28));
+    box-shadow: 0 0 18px rgba(125,211,252,0.45), inset 0 1px 0 rgba(255,255,255,0.18);
+    color: #ffffff;
+  }
+
+  .ctrl-btn.small {
+    width: auto;
+    min-width: 64px;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  /* 小屏：按钮加大 */
+  @media (max-width: 620px) {
+    .ctrl-btn { width: 58px; height: 58px; font-size: 22px; }
+    .ctrl-btn.small { min-width: 70px; font-size: 14px; }
+    .controls { gap: 8px; }
+    .ctrl-group { gap: 5px; padding: 4px; }
+  }
 </style>
 </head>
 <body>
@@ -111,19 +191,37 @@
       </div>
     </aside>
   </div>
+
+  <!-- 屏幕按钮 -->
+  <div class="controls" id="controls">
+    <div class="ctrl-group">
+      <button class="ctrl-btn" data-key="ArrowLeft" title="左移">←</button>
+      <button class="ctrl-btn" data-key="ArrowRight" title="右移">→</button>
+      <button class="ctrl-btn" data-key="ArrowDown" title="软降">↓</button>
+    </div>
+    <div class="ctrl-group">
+      <button class="ctrl-btn" data-key="KeyZ" title="逆时针旋转">↺</button>
+      <button class="ctrl-btn" data-key="ArrowUp" title="顺时针旋转">↻</button>
+      <button class="ctrl-btn" data-key="Space" title="硬降">⇓</button>
+    </div>
+    <div class="ctrl-group">
+      <button class="ctrl-btn small" data-key="KeyC" title="暂存">暂存</button>
+      <button class="ctrl-btn small" data-key="KeyR" title="重开">重开</button>
+    </div>
+  </div>
+
   <div class="hint">
     <kbd>←</kbd><kbd>→</kbd> 移动 · <kbd>↓</kbd> 软降 · <kbd>空格</kbd> 硬降 · <kbd>C</kbd> 暂存 · <kbd>R</kbd> 重开<br>
-    <span class="highlight">旋转：<kbd>↑</kbd> 或 <kbd>X</kbd> 顺时针 · <kbd>Z</kbd> 或 <kbd>Ctrl</kbd> 逆时针</span>
+    <span class="highlight">旋转：<kbd>↑</kbd>/<kbd>X</kbd> 顺时针 · <kbd>Z</kbd>/<kbd>Ctrl</kbd> 逆时针</span>
   </div>
 </div>
 
 <script>
 /* =========================================================================
- *  俄罗斯方块 Tetris — T-Spin 完整版
- *  本次重点：
- *    - 旋转方向可选：X/↑ 顺时针，Z/Ctrl 逆时针
- *    - 锁定延迟（Lock Delay）：落地后 500ms 缓冲，可继续旋转/移动
- *    - T 块深度踢墙，让 T 块更易钻缝
+ *  俄罗斯方块 Tetris — T-Spin 完整版 + 屏幕按钮
+ *  本次新增：
+ *    - 把键盘逻辑抽成 pressKey() / releaseKey()，键盘与按钮共用
+ *    - 屏幕按钮支持鼠标点击、触摸按住连发
  * ========================================================================= */
 
 const COLS = 10;
@@ -132,8 +230,8 @@ const BLOCK = 30;
 const PAD = 6;
 const CLEAR_DURATION = 340;
 const DAS = 150, ARR = 45, SOFT_INTERVAL = 45;
-const LOCK_DELAY = 500;            // 落地后可以继续操作的缓冲时间(ms)
-const MAX_LOCK_RESETS = 15;        // 落地后最多重置锁定次数，防无限拖延
+const LOCK_DELAY = 500;
+const MAX_LOCK_RESETS = 15;
 
 const SHAPES = {
   I: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
@@ -157,7 +255,6 @@ const COLORS = {
 
 const TYPES = ['I', 'J', 'L', 'O', 'S', 'T', 'Z'];
 
-// SRS 墙踢表（y 向下）
 const KICKS = {
   JLSTZ: {
     '0>1': [[0,0],[-1,0],[-1,-1],[0,2],[-1,2]],
@@ -181,11 +278,6 @@ const KICKS = {
   },
 };
 
-/**
- * T 块专用深度踢墙：横向 ±4、向上 4、向下 5。
- * 排序规则：横向偏移小优先 → 纵向向下优先。
- * 让 T 块优先"原地往下钻"，而不是乱跳。
- */
 const T_EXTRA_KICKS = (function () {
   const list = [];
   for (let dy = -4; dy <= 5; dy++) {
@@ -552,10 +644,7 @@ const state = {
   dropInterval: 1000, dropTimer: 0,
   clearing: null, gameOver: false, started: false,
   lastActionWasRotation: false, tspinPending: false, tspinMessage: null,
-  // 锁定延迟
-  grounded: false,        // 当前方块是否已落地
-  lockTimer: 0,           // 剩余锁定倒计时
-  lockResets: 0,          // 已重置次数
+  grounded: false, lockTimer: 0, lockResets: 0,
 };
 
 let bag = [];
@@ -649,11 +738,6 @@ function addScore(n) {
   updateUI();
 }
 
-/**
- * 重置锁定延迟
- * 玩家在落地后做有效操作（移动/旋转成功）时调用，
- * 让方块不会立即锁定，有时间调整位置。
- */
 function resetLockDelay() {
   if (state.grounded && state.lockResets < MAX_LOCK_RESETS) {
     state.lockTimer = LOCK_DELAY;
@@ -675,10 +759,6 @@ function move(dir) {
   return false;
 }
 
-/**
- * 旋转：dir = 1 顺时针，dir = -1 逆时针
- * T 块使用完整的深度踢墙表，让 T 块能钻缝。
- */
 function rotate(dir) {
   const p = state.current;
   if (!p || state.clearing || state.gameOver) return false;
@@ -713,14 +793,12 @@ function stepDown(soft) {
   if (!collide(p.matrix, p.x, p.y + 1)) {
     p.y++;
     if (soft) addScore(1);
-    // 主动下移会重置锁定延迟（因为方块又往下移动了）
     if (state.grounded) {
       state.grounded = false;
       state.lockTimer = 0;
       state.lockResets = 0;
     }
   } else {
-    // 无法继续下移，进入"落地"状态，开始锁定倒计时
     state.grounded = true;
     if (state.lockTimer <= 0) {
       state.lockTimer = LOCK_DELAY;
@@ -735,7 +813,7 @@ function hardDrop() {
   while (!collide(p.matrix, p.x, p.y + 1)) { p.y++; dist++; }
   addScore(dist * 2);
   state.grounded = true;
-  state.lockTimer = 0;  // 硬降直接锁定
+  state.lockTimer = 0;
   lockPiece();
 }
 
@@ -905,54 +983,118 @@ function updateInput(dt) {
   } else { d.held = false; d.timer = 0; }
 }
 
-function handleKeyDown(e) {
-  const code = e.code;
-  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyC','KeyX','KeyZ'].indexOf(code) !== -1) e.preventDefault();
+/**
+ * 按下某个键（键盘和屏幕按钮共用的入口）
+ * @param {string} code 键码，如 'ArrowLeft'、'Space'、'KeyC' ...
+ */
+function pressKey(code) {
+  if (!code) return;
   if (code === 'KeyR') { restart(); return; }
-  if (e.repeat) return;
   if (state.gameOver) return;
 
   switch (code) {
     case 'ArrowLeft':
-      if (!keys.left) { keys.left = true; move(-1); repeat.left = { held: true, timer: 0, fired: false }; }
+      if (!keys.left) {
+        keys.left = true;
+        move(-1);
+        repeat.left = { held: true, timer: 0, fired: false };
+      }
       break;
     case 'ArrowRight':
-      if (!keys.right) { keys.right = true; move(1); repeat.right = { held: true, timer: 0, fired: false }; }
+      if (!keys.right) {
+        keys.right = true;
+        move(1);
+        repeat.right = { held: true, timer: 0, fired: false };
+      }
       break;
     case 'ArrowDown':
-      if (!keys.down) { keys.down = true; repeat.down = { held: false, timer: 0 }; }
+      if (!keys.down) {
+        keys.down = true;
+        repeat.down = { held: false, timer: 0 };
+      }
       break;
-
-    // 顺时针旋转：↑ 或 X
     case 'ArrowUp':
     case 'KeyX':
       rotate(1);
       break;
-
-    // 逆时针旋转：Z 或 Ctrl
     case 'KeyZ':
     case 'ControlLeft':
     case 'ControlRight':
       rotate(-1);
       break;
-
-    case 'Space': hardDrop(); break;
-    case 'KeyC': doHold(); break;
+    case 'Space':
+      hardDrop();
+      break;
+    case 'KeyC':
+      doHold();
+      break;
   }
 }
-function handleKeyUp(e) {
-  switch (e.code) {
+
+/**
+ * 释放某个键（键盘和屏幕按钮共用的入口）
+ * @param {string} code
+ */
+function releaseKey(code) {
+  if (!code) return;
+  switch (code) {
     case 'ArrowLeft': keys.left = false; break;
     case 'ArrowRight': keys.right = false; break;
     case 'ArrowDown': keys.down = false; break;
   }
 }
+
+function handleKeyDown(e) {
+  const code = e.code;
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyC','KeyX','KeyZ'].indexOf(code) !== -1) {
+    e.preventDefault();
+  }
+  if (e.repeat) return;   // 忽略操作系统自动重复
+  pressKey(code);
+}
+
+function handleKeyUp(e) {
+  releaseKey(e.code);
+}
+
 window.addEventListener('keydown', handleKeyDown);
 window.addEventListener('keyup', handleKeyUp);
 window.addEventListener('blur', () => {
   keys.left = keys.right = keys.down = false;
   repeat.left.held = repeat.right.held = repeat.down.held = false;
+  document.querySelectorAll('.ctrl-btn.pressed').forEach((b) => b.classList.remove('pressed'));
 });
+
+/* -------- 屏幕按钮绑定 -------- */
+function bindControls() {
+  const buttons = document.querySelectorAll('.ctrl-btn[data-key]');
+  buttons.forEach((btn) => {
+    const key = btn.dataset.key;
+    if (!key) return;
+
+    // 按下：无论鼠标还是触摸都走 pointerdown
+    btn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      try { btn.setPointerCapture(e.pointerId); } catch (err) {}
+      btn.classList.add('pressed');
+      pressKey(key);
+    });
+
+    // 抬起 / 取消：释放按键
+    const release = () => {
+      btn.classList.remove('pressed');
+      releaseKey(key);
+    };
+
+    btn.addEventListener('pointerup', release);
+    btn.addEventListener('pointercancel', release);
+    // 鼠标移出按钮时也释放（触摸端因为 capture 不需要）
+    btn.addEventListener('pointerleave', (e) => {
+      if (btn.hasPointerCapture && btn.hasPointerCapture(e.pointerId)) return;
+      release();
+    });
+  });
+}
 
 /* ============================ 主循环与初始化 ============================ */
 
@@ -969,7 +1111,6 @@ function loop(now) {
     updateInput(dt);
 
     if (state.current) {
-      // 锁定倒计时
       if (state.grounded && state.lockTimer > 0) {
         state.lockTimer -= dt;
         if (state.lockTimer <= 0) {
@@ -977,7 +1118,6 @@ function loop(now) {
           lockPiece();
         }
       } else {
-        // 正常重力
         state.dropTimer += dt;
         if (state.dropTimer >= state.dropInterval) {
           state.dropTimer = 0;
@@ -998,6 +1138,9 @@ function init() {
     if (saved) state.best = parseInt(saved, 10) || 0;
   } catch (e) {}
   updateUI();
+
+  bindControls();   // 绑定屏幕按钮
+
   restart();
   requestAnimationFrame(loop);
 }
