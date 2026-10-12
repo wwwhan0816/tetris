@@ -85,6 +85,40 @@
   }
   .hint .highlight { color: #a78bfa; font-weight: 700; }
 
+  /* ================= 左上角浮动「重开」按钮 ================= */
+  .restart-fab {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+    color: #cfd8e8;
+    cursor: pointer;
+    z-index: 100;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: transform .22s ease, color .18s ease, background .18s ease, box-shadow .22s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .restart-fab svg { width: 22px; height: 22px; display: block; }
+  .restart-fab:hover {
+    color: #ffffff;
+    background: linear-gradient(160deg, rgba(125,211,252,0.30), rgba(99,102,241,0.22));
+    box-shadow: 0 8px 24px rgba(56,189,248,0.45), inset 0 1px 0 rgba(255,255,255,0.16);
+    transform: rotate(-35deg);
+  }
+  .restart-fab:active { transform: scale(0.92) rotate(-35deg); }
+
+  /* ================= 屏幕按钮区 ================= */
   .controls {
     display: flex;
     gap: 10px;
@@ -139,22 +173,27 @@
     color: #ffffff;
   }
   .ctrl-btn.small { width: auto; min-width: 64px; padding: 0 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; }
+  .ctrl-btn.wide  { min-width: 88px; }
 
   /* ============================================================
      手机端适配（竖屏）
-     布局变为：
-       [Hold] [Score Best]
-             [Board]
-       [Next] [Lines Level]
-          [Controls]
      ============================================================ */
   @media (max-width: 700px) {
     .app {
-      padding: 8px 8px 6px;
+      /* 顶部留出 58px 给浮动重开按钮 */
+      padding: 58px 8px 6px;
       gap: 6px;
       min-height: 100vh;
       justify-content: flex-start;
     }
+
+    .restart-fab {
+      width: 46px;
+      height: 46px;
+      top: 8px;
+      left: 10px;
+    }
+    .restart-fab svg { width: 22px; height: 22px; }
 
     .layout {
       flex-direction: column;
@@ -163,7 +202,6 @@
       width: 100%;
     }
 
-    /* 左右两栏变成顶部横条和底部横条 */
     .side {
       flex-direction: row;
       width: 100%;
@@ -177,42 +215,26 @@
     .side.right { order: 2; }
     .board-wrap { order: 1; }
 
-    /* 紧凑面板 */
     .panel {
       padding: 6px 10px;
       border-radius: 11px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
     }
-    .panel h3 {
-      font-size: 8px;
-      letter-spacing: 0.14em;
-      margin-bottom: 4px;
-    }
+    .panel h3 { font-size: 8px; letter-spacing: 0.14em; margin-bottom: 4px; }
 
-    /* 统计块变成横向，紧凑 */
     .stats {
       flex-direction: row;
       gap: 10px;
       padding: 8px 12px;
       align-items: center;
     }
-    .stat {
-      flex-direction: column;
-      align-items: center;
-      padding: 0;
-      gap: 1px;
-    }
+    .stat { flex-direction: column; align-items: center; padding: 0; gap: 1px; }
     .stat span { font-size: 8px; letter-spacing: 0.1em; }
     .stat b { font-size: 15px; }
 
-    /* 减小棋盘边框占位 */
-    .board-wrap {
-      padding: 6px;
-      border-radius: 14px;
-    }
+    .board-wrap { padding: 6px; border-radius: 14px; }
     #boardCanvas { border-radius: 9px; }
 
-    /* 按钮区紧凑并放大点击区 */
     .controls {
       gap: 6px;
       padding: 6px;
@@ -220,10 +242,7 @@
       max-width: 480px;
       justify-content: center;
     }
-    .ctrl-group {
-      gap: 5px;
-      padding: 4px;
-    }
+    .ctrl-group { gap: 5px; padding: 4px; }
     .ctrl-btn {
       width: 50px;
       height: 50px;
@@ -231,29 +250,33 @@
       border-radius: 9px;
     }
     .ctrl-btn.small { min-width: 58px; font-size: 12px; padding: 0 10px; }
+    .ctrl-btn.wide { min-width: 96px; }
 
-    /* 隐藏键盘提示，节省空间 */
     .hint { display: none; }
   }
 
-  /* 超小屏（iPhone SE 等）再紧凑一点 */
   @media (max-width: 380px) {
-    .app { padding: 6px 6px 4px; gap: 4px; }
+    .app { padding: 54px 6px 4px; gap: 4px; }
+    .restart-fab { width: 42px; height: 42px; top: 6px; left: 8px; }
     .panel { padding: 5px 8px; }
     .ctrl-btn { width: 46px; height: 46px; font-size: 17px; }
     .ctrl-btn.small { min-width: 52px; font-size: 11px; }
+    .ctrl-btn.wide { min-width: 84px; }
     .controls { gap: 4px; padding: 4px; }
     .ctrl-group { gap: 4px; padding: 3px; }
-  }
-
-  /* 横屏时给出提示（可选） */
-  @media (orientation: landscape) and (max-height: 500px) {
-    .app { gap: 4px; padding: 6px; }
-    .hint { display: block; font-size: 10px; }
   }
 </style>
 </head>
 <body>
+
+<!-- 左上角浮动重开按钮 -->
+<button class="restart-fab" id="restartFab" title="重新开始" aria-label="重新开始">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12a9 9 0 1 1-2.64-6.36"/>
+    <polyline points="21 3 21 9 15 9"/>
+  </svg>
+</button>
 
 <div class="app">
   <div class="layout">
@@ -293,8 +316,7 @@
       <button class="ctrl-btn" data-key="Space" title="硬降">⇓</button>
     </div>
     <div class="ctrl-group">
-      <button class="ctrl-btn small" data-key="KeyC" title="暂存">暂存</button>
-      <button class="ctrl-btn small" data-key="KeyR" title="重开">重开</button>
+      <button class="ctrl-btn small wide" data-key="KeyC" title="暂存">暂存</button>
     </div>
   </div>
 
@@ -306,8 +328,7 @@
 
 <script>
 /* =========================================================================
- *  俄罗斯方块 Tetris — 手机竖屏适配版
- *  本次新增：resize() 根据屏幕大小动态调整画布显示尺寸
+ *  俄罗斯方块 Tetris — 手机适配 + 左上角重开按钮
  * ========================================================================= */
 
 const COLS = 10;
@@ -537,10 +558,6 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-/**
- * 初始化画布：设置内部物理像素（带 DPR），并给一个初始 CSS 显示尺寸。
- * 后续 resize() 会按屏幕大小覆盖 CSS 显示尺寸。
- */
 function setupCanvas(canvas, w, h) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = Math.round(w * dpr);
@@ -811,6 +828,7 @@ const levelEl = document.getElementById('levelEl');
 const overlay = document.getElementById('overlay');
 const finalScoreEl = document.getElementById('finalScore');
 const restartBtn = document.getElementById('restartBtn');
+const restartFab = document.getElementById('restartFab');
 
 function updateUI() {
   scoreEl.textContent = state.score;
@@ -1156,11 +1174,6 @@ function bindControls() {
 
 /* ============================ 尺寸自适应 ============================ */
 
-/**
- * 根据屏幕大小动态调整画布的 CSS 显示尺寸。
- * 画布内部物理像素始终保持不变（由 setupCanvas 决定），
- * 这里只改 CSS 显示尺寸，图像会被浏览器缩放，清晰度依然足够。
- */
 function resize() {
   const isMobile = window.innerWidth <= 700;
 
@@ -1168,34 +1181,30 @@ function resize() {
     const vh = window.innerHeight;
     const vw = window.innerWidth;
 
-    // 预留空间：顶部信息条 + 底部按钮区 + 页面边距
-    // 数值根据 CSS 布局估算，可微调
-    const topBar = 92;      // Hold/Score 横条约 92px
-    const bottomBar = 92;   // Next/Lines 横条约 92px
-    const controlsH = 130;  // 按钮区约 130px（含内边距）
-    const margins = 40;     // 页面上下 padding + 间距
+    const topBar = 92;        // Hold / Score 横条
+    const bottomBar = 92;     // Next / Lines 横条
+    const controlsH = 130;    // 底部按钮区
+    const margins = 40;       // 页面 padding + 间距
+    const fabSpace = 50;      // 顶部浮动重开按钮占用的额外空间（padding-top 增加量）
 
-    const reserved = topBar + bottomBar + controlsH + margins;
+    const reserved = topBar + bottomBar + controlsH + margins + fabSpace;
     const availableH = vh - reserved;
-    const availableW = vw - 24;      // 左右各 12px
+    const availableW = vw - 24;
 
     // 棋盘宽高比 10:20 = 1:2
     let boardH = Math.min(availableH, availableW * 2);
     let boardW = boardH / 2;
 
-    // 兜底最小值，避免极端窄屏
     if (boardH < 300) { boardH = 300; boardW = 150; }
 
     boardCanvas.style.width = boardW + 'px';
     boardCanvas.style.height = boardH + 'px';
 
-    // Hold / Next 迷你画布缩小
     holdCanvas.style.width = '60px';
     holdCanvas.style.height = '38px';
     nextCanvas.style.width = '56px';
     nextCanvas.style.height = '90px';
   } else {
-    // 桌面端恢复原始尺寸
     boardCanvas.style.width = '300px';
     boardCanvas.style.height = '600px';
     holdCanvas.style.width = '120px';
@@ -1207,7 +1216,6 @@ function resize() {
 
 window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', () => {
-  // 旋转屏幕后延迟调用，等待浏览器完成布局
   setTimeout(resize, 250);
 });
 
@@ -1255,7 +1263,7 @@ function init() {
   updateUI();
 
   bindControls();
-  resize();            // 初始自适应
+  resize();
 
   restart();
   requestAnimationFrame(loop);
@@ -1263,7 +1271,11 @@ function init() {
 
 window.addEventListener('pointerdown', getAudioCtx, { once: true });
 window.addEventListener('keydown', getAudioCtx, { once: true });
+
+// 左上角浮动按钮 & 结算弹窗的「再来一局」都触发重开
+restartFab.addEventListener('click', () => { getAudioCtx(); restart(); });
 restartBtn.addEventListener('click', () => { getAudioCtx(); restart(); });
+
 init();
 </script>
 </body>
