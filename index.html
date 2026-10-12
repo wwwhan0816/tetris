@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>俄罗斯方块 · Tetris</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; background: #1b1e26;
+    background-image:
+      radial-gradient(1100px 620px at 12% -12%, rgba(99,102,241,0.20), transparent 62%),
+      radial-gradient(900px 560px at 102% 104%, rgba(56,189,248,0.14), transparent 60%),
+      linear-gradient(160deg, #242833 0%, #1a1d25 55%, #15171d 100%);
+    font-family: "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: #e8ecf5; user-select: none; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  .app { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 22px; }
+  .layout { display: flex; align-items: flex-start; gap: 18px; }
+  .side { display: flex; flex-direction: column; gap: 14px; width: 148px; }
+  .panel {
+    background: linear-gradient(160deg, rgba(255,255,255,0.075), rgba(255,255,255,0.018));
+    border: 1px solid rgba(255,255,255,0.09); border-radius: 15px; padding: 12px 13px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.07);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  }
+  .panel h3 {
+    margin: 0 0 9px; font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase; color: #7b85a0;
+  }
+  .panel canvas { display: block; margin: 0 auto; }
+  .stats { display: flex; flex-direction: column; gap: 2px; }
+  .stat { display: flex; align-items: baseline; justify-content: space-between; padding: 4px 2px; }
+  .stat span { font-size: 10px; font-weight: 600; letter-spacing: 0.14em; color: #79829b; }
+  .stat b {
+    font-size: 18px; font-variant-numeric: tabular-nums; font-weight: 700;
+    color: #eef2fb; text-shadow: 0 0 14px rgba(120,170,255,0.45);
+  }
+  .board-wrap {
+    position: relative; padding: 8px; border-radius: 18px;
+    background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.012));
+    border: 1px solid rgba(255,255,255,0.11);
+    box-shadow: 0 26px 60px rgba(0,0,0,0.58), 0 0 70px rgba(96,165,250,0.10),
+                inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  #boardCanvas { display: block; border-radius: 11px; box-shadow: inset 0 0 40px rgba(0,0,0,0.6); }
+  .overlay {
+    position: absolute; inset: 0; border-radius: 18px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; background: rgba(10,12,18,0.74);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    opacity: 0; visibility: hidden; transition: opacity .34s ease, visibility .34s ease; z-index: 5;
+  }
+  .overlay.show { opacity: 1; visibility: visible; }
+  .over-title {
+    font-size: 27px; font-weight: 800; letter-spacing: 0.18em;
+    background: linear-gradient(135deg, #7dd3fc, #a78bfa 60%, #f472b6);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .over-score { font-size: 13px; letter-spacing: 0.08em; color: #a9b3c9; }
+  .over-score b {
+    display: inline-block; margin-left: 6px; font-size: 23px;
+    font-variant-numeric: tabular-nums; color: #ffffff;
+    text-shadow: 0 0 20px rgba(125,211,252,0.65);
+  }
+  button {
+    padding: 11px 30px; border: none; border-radius: 11px;
+    font-family: inherit; font-size: 14.5px; font-weight: 700;
+    letter-spacing: 0.06em; color: #fff; cursor: pointer;
+    background: linear-gradient(135deg, #38bdf8, #6366f1);
+    box-shadow: 0 8px 24px rgba(56,189,248,0.38);
+    transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+  }
+  button:hover { transform: translateY(-2px); box-shadow: 0 13px 30px rgba(56,189,248,0.55); filter: brightness(1.07); }
+  button:active { transform: translateY(0) scale(.97); }
+  .hint { font-size: 12px; letter-spacing: 0.07em; color: #6d768d; text-align: center; line-height: 1.9; }
+  .hint kbd {
+    display: inline-block; padding: 1px 6px; margin: 0 1px; border-radius: 5px;
+    font-family: inherit; font-size: 11px; color: #b8c2d8;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+  }
+  .hint .highlight { color: #a78bfa; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="layout">
+    <aside class="side">
+      <div class="panel"><h3>Hold</h3><canvas id="holdCanvas"></canvas></div>
+      <div class="panel stats">
+        <div class="stat"><span>SCORE</span><b id="scoreEl">0</b></div>
+        <div class="stat"><span>BEST</span><b id="bestEl">0</b></div>
+      </div>
+    </aside>
+    <main class="board-wrap">
+      <canvas id="boardCanvas"></canvas>
+      <div class="overlay" id="overlay">
+        <div class="over-title">GAME OVER</div>
+        <div class="over-score">本局得分 <b id="finalScore">0</b></div>
+        <button id="restartBtn">再来一局</button>
+      </div>
+    </main>
+    <aside class="side">
+      <div class="panel"><h3>Next</h3><canvas id="nextCanvas"></canvas></div>
+      <div class="panel stats">
+        <div class="stat"><span>LINES</span><b id="linesEl">0</b></div>
+        <div class="stat"><span>LEVEL</span><b id="levelEl">1</b></div>
+      </div>
+    </aside>
+  </div>
+  <div class="hint">
+    <kbd>←</kbd><kbd>→</kbd> 移动 · <kbd>↓</kbd> 软降 · <kbd>空格</kbd> 硬降 · <kbd>C</kbd> 暂存 · <kbd>R</kbd> 重开<br>
+    <span class="highlight">旋转：<kbd>↑</kbd> 或 <kbd>X</kbd> 顺时针 · <kbd>Z</kbd> 或 <kbd>Ctrl</kbd> 逆时针</span>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+ *  俄罗斯方块 Tetris — T-Spin 完整版
+ *  本次重点：
+ *    - 旋转方向可选：X/↑ 顺时针，Z/Ctrl 逆时针
+ *    - 锁定延迟（Lock Delay）：落地后 500ms 缓冲，可继续旋转/移动
+ *    - T 块深度踢墙，让 T 块更易钻缝
+ * ========================================================================= */
+
+const COLS = 10;
+const ROWS = 20;
+const BLOCK = 30;
+const PAD = 6;
+const CLEAR_DURATION = 340;
+const DAS = 150, ARR = 45, SOFT_INTERVAL = 45;
+const LOCK_DELAY = 500;            // 落地后可以继续操作的缓冲时间(ms)
+const MAX_LOCK_RESETS = 15;        // 落地后最多重置锁定次数，防无限拖延
+
+const SHAPES = {
+  I: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+  J: [[1,0,0],[1,1,1],[0,0,0]],
+  L: [[0,0,1],[1,1,1],[0,0,0]],
+  O: [[1,1],[1,1]],
+  S: [[0,1,1],[1,1,0],[0,0,0]],
+  T: [[0,1,0],[1,1,1],[0,0,0]],
+  Z: [[1,1,0],[0,1,1],[0,0,0]],
+};
+
+const COLORS = {
+  I: ['#67e8f9', '#0891b2'],
+  J: ['#7dabff', '#2451d8'],
+  L: ['#fbbf24', '#ea580c'],
+  O: ['#fde047', '#eab308'],
+  S: ['#5eead4', '#10b981'],
+  T: ['#c084fc', '#8b5cf6'],
+  Z: ['#fb7185', '#dc2626'],
+};
+
+const TYPES = ['I', 'J', 'L', 'O', 'S', 'T', 'Z'];
+
+// SRS 墙踢表（y 向下）
+const KICKS = {
+  JLSTZ: {
+    '0>1': [[0,0],[-1,0],[-1,-1],[0,2],[-1,2]],
+    '1>0': [[0,0],[1,0],[1,1],[0,-2],[1,-2]],
+    '1>2': [[0,0],[1,0],[1,1],[0,-2],[1,-2]],
+    '2>1': [[0,0],[-1,0],[-1,-1],[0,2],[-1,2]],
+    '2>3': [[0,0],[1,0],[1,-1],[0,2],[1,2]],
+    '3>2': [[0,0],[-1,0],[-1,1],[0,-2],[-1,-2]],
+    '3>0': [[0,0],[-1,0],[-1,1],[0,-2],[-1,-2]],
+    '0>3': [[0,0],[1,0],[1,-1],[0,2],[1,2]],
+  },
+  I: {
+    '0>1': [[0,0],[-2,0],[1,0],[-2,1],[1,-2]],
+    '1>0': [[0,0],[2,0],[-1,0],[2,-1],[-1,2]],
+    '1>2': [[0,0],[-1,0],[2,0],[-1,-2],[2,1]],
+    '2>1': [[0,0],[1,0],[-2,0],[1,2],[-2,-1]],
+    '2>3': [[0,0],[2,0],[-1,0],[2,-1],[-1,2]],
+    '3>2': [[0,0],[-2,0],[1,0],[-2,1],[1,-2]],
+    '3>0': [[0,0],[1,0],[-2,0],[1,2],[-2,-1]],
+    '0>3': [[0,0],[-1,0],[2,0],[-1,-2],[2,1]],
+  },
+};
+
+/**
+ * T 块专用深度踢墙：横向 ±4、向上 4、向下 5。
+ * 排序规则：横向偏移小优先 → 纵向向下优先。
+ * 让 T 块优先"原地往下钻"，而不是乱跳。
+ */
+const T_EXTRA_KICKS = (function () {
+  const list = [];
+  for (let dy = -4; dy <= 5; dy++) {
+    for (let dx = -4; dx <= 4; dx++) {
+      if (dx === 0 && dy === 0) continue;
+      list.push([dx, dy]);
+    }
+  }
+  list.sort((a, b) => {
+    const ax = Math.abs(a[0]), bx = Math.abs(b[0]);
+    if (ax !== bx) return ax - bx;
+    if (a[1] !== b[1]) return b[1] - a[1];
+    return 0;
+  });
+  return list;
+})();
+
+const LINE_SCORES  = { 1: 100, 2: 300, 3: 500, 4: 800 };
+const TSPIN_SCORES = { 1: 800, 2: 1200, 3: 1600 };
+const TSPIN_NO_LINE = 400;
+
+/* ============================ 音效 ============================ */
+
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    try { audioCtx = new AC(); } catch (e) { return null; }
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function makeNoiseBuffer(ctx, dur, decayPow) {
+  const len = Math.max(1, Math.floor(ctx.sampleRate * dur));
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decayPow);
+  }
+  return buf;
+}
+
+function playRotateSound() {
+  const ctx = getAudioCtx(); if (!ctx) return;
+  const t = ctx.currentTime;
+  const f0 = 640, f1 = 1150;
+  const osc = ctx.createOscillator(); osc.type = 'square';
+  osc.frequency.setValueAtTime(f0, t);
+  osc.frequency.exponentialRampToValueAtTime(f1, t + 0.042);
+  const osc2 = ctx.createOscillator(); osc2.type = 'square';
+  osc2.frequency.setValueAtTime(f0 * 1.008, t);
+  osc2.frequency.exponentialRampToValueAtTime(f1 * 1.008, t + 0.042);
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.linearRampToValueAtTime(0.05, t + 0.004);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.075);
+  osc.connect(gain); osc2.connect(gain); gain.connect(ctx.destination);
+  osc.start(t); osc2.start(t); osc.stop(t + 0.09); osc2.stop(t + 0.09);
+}
+
+function playLockSound() {
+  const ctx = getAudioCtx(); if (!ctx) return;
+  const t = ctx.currentTime;
+  const osc = ctx.createOscillator(); osc.type = 'square';
+  osc.frequency.setValueAtTime(210, t);
+  osc.frequency.exponentialRampToValueAtTime(72, t + 0.08);
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.linearRampToValueAtTime(0.085, t + 0.004);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.135);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(t); osc.stop(t + 0.16);
+  try {
+    const dur = 0.055;
+    const noise = ctx.createBufferSource();
+    noise.buffer = makeNoiseBuffer(ctx, dur, 3);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1500;
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.075, t);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    noise.connect(lp); lp.connect(ng); ng.connect(ctx.destination);
+    noise.start(t); noise.stop(t + dur);
+  } catch (e) {}
+}
+
+function playClearSound(lineCount) {
+  const ctx = getAudioCtx(); if (!ctx) return;
+  const n = Math.min(Math.max(lineCount, 1), 4);
+  const t0 = ctx.currentTime;
+  const scale = [0, 4, 7, 12];
+  const root = 523.25;
+  for (let i = 0; i < n; i++) {
+    const t = t0 + i * 0.068;
+    const f = root * Math.pow(2, scale[i] / 12);
+    const osc = ctx.createOscillator(); osc.type = 'square';
+    osc.frequency.setValueAtTime(f * 1.9, t);
+    osc.frequency.exponentialRampToValueAtTime(f, t + 0.055);
+    const osc2 = ctx.createOscillator(); osc2.type = 'square';
+    osc2.frequency.setValueAtTime(f * 1.005 * 1.9, t);
+    osc2.frequency.exponentialRampToValueAtTime(f * 1.005, t + 0.055);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.075, t + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+    osc.connect(gain); osc2.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc2.start(t); osc.stop(t + 0.12); osc2.stop(t + 0.12);
+  }
+  const dingT = t0 + n * 0.068;
+  const ding = ctx.createOscillator(); ding.type = 'triangle';
+  ding.frequency.setValueAtTime(root * 3.2, dingT);
+  ding.frequency.exponentialRampToValueAtTime(root * 2.4, dingT + 0.28);
+  const dingGain = ctx.createGain();
+  dingGain.gain.setValueAtTime(0.0001, dingT);
+  dingGain.gain.linearRampToValueAtTime(0.13, dingT + 0.005);
+  dingGain.gain.exponentialRampToValueAtTime(0.0001, dingT + 0.32);
+  ding.connect(dingGain); dingGain.connect(ctx.destination);
+  ding.start(dingT); ding.stop(dingT + 0.36);
+  try {
+    const dur = 0.09;
+    const noise = ctx.createBufferSource();
+    noise.buffer = makeNoiseBuffer(ctx, dur, 2);
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2600;
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.11, t0);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    noise.connect(hp); hp.connect(ng); ng.connect(ctx.destination);
+    noise.start(t0); noise.stop(t0 + dur);
+  } catch (e) {}
+}
+
+function playTSpinSound() {
+  const ctx = getAudioCtx(); if (!ctx) return;
+  const t = ctx.currentTime;
+  const sweep = ctx.createOscillator(); sweep.type = 'sawtooth';
+  sweep.frequency.setValueAtTime(196, t);
+  sweep.frequency.exponentialRampToValueAtTime(880, t + 0.16);
+  const sweepFilter = ctx.createBiquadFilter(); sweepFilter.type = 'lowpass';
+  sweepFilter.frequency.setValueAtTime(1200, t);
+  sweepFilter.frequency.exponentialRampToValueAtTime(4200, t + 0.16);
+  const sg = ctx.createGain();
+  sg.gain.setValueAtTime(0.0001, t);
+  sg.gain.linearRampToValueAtTime(0.055, t + 0.012);
+  sg.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+  sweep.connect(sweepFilter); sweepFilter.connect(sg); sg.connect(ctx.destination);
+  sweep.start(t); sweep.stop(t + 0.22);
+  [1046.5, 1318.5].forEach((f, i) => {
+    const bt = t + 0.07 + i * 0.075;
+    const osc = ctx.createOscillator(); osc.type = 'triangle';
+    osc.frequency.setValueAtTime(f, bt);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, bt);
+    g.gain.linearRampToValueAtTime(0.1, bt + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, bt + 0.3);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(bt); osc.stop(bt + 0.34);
+  });
+}
+
+/* ============================ 渲染 ============================ */
+
+function roundRect(ctx, x, y, w, h, r) {
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
+}
+
+function setupCanvas(canvas, w, h) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return ctx;
+}
+
+const sprites = {};
+function makeSprite(c1, c2) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const size = BLOCK + PAD * 2;
+  const cv = document.createElement('canvas');
+  cv.width = Math.round(size * dpr);
+  cv.height = Math.round(size * dpr);
+  const g = cv.getContext('2d');
+  g.scale(dpr, dpr); g.translate(PAD, PAD);
+  const r = 7;
+  const grad = g.createLinearGradient(0, 0, BLOCK, BLOCK);
+  grad.addColorStop(0, c1); grad.addColorStop(1, c2);
+  g.save(); g.shadowColor = c1; g.shadowBlur = 11; g.fillStyle = grad;
+  roundRect(g, 1.5, 1.5, BLOCK - 3, BLOCK - 3, r); g.fill(); g.fill(); g.restore();
+  g.save(); roundRect(g, 3.2, 3.2, BLOCK - 6.4, BLOCK - 6.4, r - 2.5);
+  g.strokeStyle = 'rgba(255,255,255,0.42)'; g.lineWidth = 1.2; g.stroke(); g.restore();
+  g.save();
+  const gh = (BLOCK - 9) * 0.44;
+  roundRect(g, 4.5, 4.5, BLOCK - 9, gh, r - 3);
+  const gloss = g.createLinearGradient(0, 4.5, 0, 4.5 + gh);
+  gloss.addColorStop(0, 'rgba(255,255,255,0.38)');
+  gloss.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gloss; g.fill(); g.restore();
+  return { cv, size };
+}
+
+function buildSprites() {
+  for (const type of TYPES) {
+    const [c1, c2] = COLORS[type];
+    sprites[type] = makeSprite(c1, c2);
+  }
+}
+
+const boardCanvas = document.getElementById('boardCanvas');
+const boardCtx = setupCanvas(boardCanvas, COLS * BLOCK, ROWS * BLOCK);
+const nextCanvas = document.getElementById('nextCanvas');
+const nextCtx = setupCanvas(nextCanvas, 120, 192);
+const holdCanvas = document.getElementById('holdCanvas');
+const holdCtx = setupCanvas(holdCanvas, 120, 76);
+const NEXT_W = 120, NEXT_H = 192, HOLD_W = 120, HOLD_H = 76;
+
+function drawCell(type, px, py, alpha) {
+  const s = sprites[type]; if (!s) return;
+  boardCtx.globalAlpha = alpha === undefined ? 1 : alpha;
+  boardCtx.drawImage(s.cv, px - PAD, py - PAD, s.size, s.size);
+  boardCtx.globalAlpha = 1;
+}
+
+function drawGhostCell(type, px, py) {
+  const c1 = COLORS[type][0];
+  boardCtx.save();
+  boardCtx.globalAlpha = 0.14; boardCtx.fillStyle = c1;
+  roundRect(boardCtx, px + 2.5, py + 2.5, BLOCK - 5, BLOCK - 5, 6); boardCtx.fill();
+  boardCtx.globalAlpha = 0.55; boardCtx.strokeStyle = c1;
+  boardCtx.lineWidth = 1.6; boardCtx.setLineDash([4, 3]); boardCtx.stroke();
+  boardCtx.restore();
+}
+
+function drawClearingCell(x, y, type, p) {
+  const s = sprites[type];
+  const px = x * BLOCK, py = y * BLOCK;
+  boardCtx.save();
+  boardCtx.globalAlpha = Math.max(0, 1 - p);
+  boardCtx.drawImage(s.cv, px - PAD, py - PAD, s.size, s.size);
+  const flash = Math.sin(Math.min(1, p) * Math.PI) * 0.9;
+  if (flash > 0.01) {
+    boardCtx.globalAlpha = flash; boardCtx.fillStyle = '#ffffff';
+    roundRect(boardCtx, px + 2, py + 2, BLOCK - 4, BLOCK - 4, 6); boardCtx.fill();
+  }
+  boardCtx.restore();
+}
+
+function drawTSpinMessage(now) {
+  const msg = state.tspinMessage; if (!msg) return;
+  const elapsed = now - msg.start; const DURATION = 1100;
+  if (elapsed >= DURATION) { state.tspinMessage = null; return; }
+  let alpha = 1;
+  if (elapsed < 180) alpha = elapsed / 180;
+  else if (elapsed > DURATION - 300) alpha = (DURATION - elapsed) / 300;
+  alpha = Math.max(0, Math.min(1, alpha));
+  const rise = Math.min(46, elapsed * 0.055);
+  const cx = COLS * BLOCK / 2, cy = ROWS * BLOCK / 2 - 10 - rise;
+  const scale = 1 + (1 - Math.min(1, elapsed / 220)) * 0.22;
+  boardCtx.save();
+  boardCtx.globalAlpha = alpha; boardCtx.textAlign = 'center'; boardCtx.textBaseline = 'middle';
+  boardCtx.translate(cx, cy); boardCtx.scale(scale, scale);
+  boardCtx.font = 'bold 24px "Segoe UI", system-ui, sans-serif';
+  boardCtx.shadowColor = '#c084fc'; boardCtx.shadowBlur = 26;
+  const grad = boardCtx.createLinearGradient(-110, -14, 110, 14);
+  grad.addColorStop(0, '#7dd3fc'); grad.addColorStop(0.5, '#e9d5ff'); grad.addColorStop(1, '#f472b6');
+  boardCtx.fillStyle = grad;
+  boardCtx.fillText(msg.text, 0, 0); boardCtx.fillText(msg.text, 0, 0);
+  boardCtx.restore();
+}
+
+function renderBoard(now) {
+  const W = COLS * BLOCK, H = ROWS * BLOCK;
+  boardCtx.clearRect(0, 0, W, H);
+  const bg = boardCtx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#1a1e28'); bg.addColorStop(1, '#0f1218');
+  boardCtx.fillStyle = bg; boardCtx.fillRect(0, 0, W, H);
+  boardCtx.strokeStyle = 'rgba(255,255,255,0.045)'; boardCtx.lineWidth = 1;
+  boardCtx.beginPath();
+  for (let x = 1; x < COLS; x++) { boardCtx.moveTo(x * BLOCK + 0.5, 0); boardCtx.lineTo(x * BLOCK + 0.5, H); }
+  for (let y = 1; y < ROWS; y++) { boardCtx.moveTo(0, y * BLOCK + 0.5); boardCtx.lineTo(W, y * BLOCK + 0.5); }
+  boardCtx.stroke();
+  const clearRows = state.clearing ? state.clearing.rows : null;
+  const clearP = state.clearing ? Math.min(1, (now - state.clearing.start) / CLEAR_DURATION) : 0;
+  for (let y = 0; y < ROWS; y++) {
+    const row = state.board[y];
+    for (let x = 0; x < COLS; x++) {
+      const t = row[x]; if (!t) continue;
+      if (clearRows && clearRows.indexOf(y) !== -1) drawClearingCell(x, y, t, clearP);
+      else drawCell(t, x * BLOCK, y * BLOCK, 1);
+    }
+  }
+  const p = state.current;
+  if (!state.clearing && p && !state.gameOver) {
+    let gy = p.y;
+    while (!collide(p.matrix, p.x, gy + 1)) gy++;
+    for (let y = 0; y < p.matrix.length; y++) {
+      for (let x = 0; x < p.matrix.length; x++) {
+        if (p.matrix[y][x]) drawGhostCell(p.type, (p.x + x) * BLOCK, (gy + y) * BLOCK);
+      }
+    }
+    for (let y = 0; y < p.matrix.length; y++) {
+      for (let x = 0; x < p.matrix.length; x++) {
+        if (p.matrix[y][x]) drawCell(p.type, (p.x + x) * BLOCK, (p.y + y) * BLOCK, 1);
+      }
+    }
+  }
+  drawTSpinMessage(now);
+}
+
+function drawMiniCell(ctx, x, y, size, c1, c2) {
+  const r = Math.max(2, size * 0.24);
+  const g = ctx.createLinearGradient(x, y, x + size, y + size);
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
+  roundRect(ctx, x + 1, y + 1, size - 2, size - 2, r);
+  ctx.fillStyle = g; ctx.shadowColor = c1; ctx.shadowBlur = 8; ctx.fill(); ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(255,255,255,0.30)'; ctx.lineWidth = 1; ctx.stroke();
+}
+
+function renderMini(ctx, w, h, types, cell) {
+  ctx.clearRect(0, 0, w, h);
+  if (!types.length) return;
+  const slotH = h / types.length;
+  types.forEach((type, i) => {
+    if (!type) return;
+    const m = SHAPES[type];
+    let minX = 99, maxX = -1, minY = 99, maxY = -1;
+    for (let y = 0; y < m.length; y++) {
+      for (let x = 0; x < m.length; x++) {
+        if (m[y][x]) {
+          if (x < minX) minX = x; if (x > maxX) maxX = x;
+          if (y < minY) minY = y; if (y > maxY) maxY = y;
+        }
+      }
+    }
+    const pw = (maxX - minX + 1) * cell, ph = (maxY - minY + 1) * cell;
+    const ox = (w - pw) / 2 - minX * cell;
+    const oy = i * slotH + (slotH - ph) / 2 - minY * cell;
+    const [c1, c2] = COLORS[type];
+    for (let y = 0; y < m.length; y++) {
+      for (let x = 0; x < m.length; x++) {
+        if (m[y][x]) drawMiniCell(ctx, ox + x * cell, oy + y * cell, cell, c1, c2);
+      }
+    }
+  });
+}
+
+function renderNext() { renderMini(nextCtx, NEXT_W, NEXT_H, state.queue.slice(0, 3), 16); }
+function renderHold() { renderMini(holdCtx, HOLD_W, HOLD_H, state.hold ? [state.hold] : [], 20); }
+
+/* ============================ 游戏逻辑 ============================ */
+
+const state = {
+  board: [], current: null, queue: [], hold: null, canHold: true,
+  score: 0, best: 0, lines: 0, level: 1,
+  dropInterval: 1000, dropTimer: 0,
+  clearing: null, gameOver: false, started: false,
+  lastActionWasRotation: false, tspinPending: false, tspinMessage: null,
+  // 锁定延迟
+  grounded: false,        // 当前方块是否已落地
+  lockTimer: 0,           // 剩余锁定倒计时
+  lockResets: 0,          // 已重置次数
+};
+
+let bag = [];
+
+function createBoard() { return Array.from({ length: ROWS }, () => new Array(COLS).fill(null)); }
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function refillQueue() {
+  while (state.queue.length < 6) {
+    if (!bag.length) bag = shuffle(TYPES.slice());
+    state.queue.push(bag.pop());
+  }
+}
+function rotateMatrix(m, dir) {
+  const N = m.length;
+  const out = Array.from({ length: N }, () => new Array(N).fill(0));
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      if (dir > 0) out[x][N - 1 - y] = m[y][x];
+      else out[N - 1 - x][y] = m[y][x];
+    }
+  }
+  return out;
+}
+function createPiece(type) {
+  const matrix = SHAPES[type].map((row) => row.slice());
+  const w = matrix.length;
+  return { type, matrix, x: Math.floor((COLS - w) / 2), y: 0, rot: 0 };
+}
+function collide(matrix, px, py) {
+  const N = matrix.length;
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      if (!matrix[y][x]) continue;
+      const bx = px + x, by = py + y;
+      if (bx < 0 || bx >= COLS || by >= ROWS) return true;
+      if (by >= 0 && state.board[by][bx]) return true;
+    }
+  }
+  return false;
+}
+function gravityForLevel(level) {
+  const table = [1000, 850, 720, 600, 490, 400, 320, 250, 190, 140, 100, 80, 65, 55, 45];
+  return table[Math.min(level - 1, table.length - 1)];
+}
+
+function checkTSpin(piece) {
+  const corners = [
+    [piece.x, piece.y], [piece.x + 2, piece.y],
+    [piece.x, piece.y + 2], [piece.x + 2, piece.y + 2],
+  ];
+  let occupied = 0;
+  for (const [cx, cy] of corners) {
+    if (cx < 0 || cx >= COLS || cy < 0 || cy >= ROWS) occupied++;
+    else if (state.board[cy][cx]) occupied++;
+  }
+  return occupied >= 3;
+}
+
+function tspinText(n) {
+  return n === 0 ? 'T-SPIN' : n === 1 ? 'T-SPIN SINGLE' : n === 2 ? 'T-SPIN DOUBLE' : n === 3 ? 'T-SPIN TRIPLE' : 'T-SPIN';
+}
+
+/* -------- UI -------- */
+const scoreEl = document.getElementById('scoreEl');
+const bestEl = document.getElementById('bestEl');
+const linesEl = document.getElementById('linesEl');
+const levelEl = document.getElementById('levelEl');
+const overlay = document.getElementById('overlay');
+const finalScoreEl = document.getElementById('finalScore');
+const restartBtn = document.getElementById('restartBtn');
+
+function updateUI() {
+  scoreEl.textContent = state.score;
+  bestEl.textContent = state.best;
+  linesEl.textContent = state.lines;
+  levelEl.textContent = state.level;
+}
+function addScore(n) {
+  if (n <= 0) return;
+  state.score += n;
+  if (state.score > state.best) {
+    state.best = state.score;
+    try { localStorage.setItem('tetris_best', String(state.best)); } catch (e) {}
+  }
+  updateUI();
+}
+
+/**
+ * 重置锁定延迟
+ * 玩家在落地后做有效操作（移动/旋转成功）时调用，
+ * 让方块不会立即锁定，有时间调整位置。
+ */
+function resetLockDelay() {
+  if (state.grounded && state.lockResets < MAX_LOCK_RESETS) {
+    state.lockTimer = LOCK_DELAY;
+    state.lockResets++;
+  }
+}
+
+/* -------- 核心操作 -------- */
+
+function move(dir) {
+  const p = state.current;
+  if (!p || state.clearing || state.gameOver) return false;
+  if (!collide(p.matrix, p.x + dir, p.y)) {
+    p.x += dir;
+    state.lastActionWasRotation = false;
+    resetLockDelay();
+    return true;
+  }
+  return false;
+}
+
+/**
+ * 旋转：dir = 1 顺时针，dir = -1 逆时针
+ * T 块使用完整的深度踢墙表，让 T 块能钻缝。
+ */
+function rotate(dir) {
+  const p = state.current;
+  if (!p || state.clearing || state.gameOver) return false;
+  if (p.type === 'O') return false;
+
+  const from = p.rot;
+  const to = (from + (dir > 0 ? 1 : 3)) % 4;
+  const newMatrix = rotateMatrix(p.matrix, dir);
+
+  const table = p.type === 'I' ? KICKS.I : KICKS.JLSTZ;
+  const baseKicks = table[from + '>' + to] || [[0, 0]];
+  const kicks = p.type === 'T' ? baseKicks.concat(T_EXTRA_KICKS) : baseKicks;
+
+  for (let i = 0; i < kicks.length; i++) {
+    const kx = kicks[i][0], ky = kicks[i][1];
+    if (!collide(newMatrix, p.x + kx, p.y + ky)) {
+      p.matrix = newMatrix;
+      p.x += kx;
+      p.y += ky;
+      p.rot = to;
+      state.lastActionWasRotation = true;
+      resetLockDelay();
+      playRotateSound();
+      return true;
+    }
+  }
+  return false;
+}
+
+function stepDown(soft) {
+  const p = state.current; if (!p) return;
+  if (!collide(p.matrix, p.x, p.y + 1)) {
+    p.y++;
+    if (soft) addScore(1);
+    // 主动下移会重置锁定延迟（因为方块又往下移动了）
+    if (state.grounded) {
+      state.grounded = false;
+      state.lockTimer = 0;
+      state.lockResets = 0;
+    }
+  } else {
+    // 无法继续下移，进入"落地"状态，开始锁定倒计时
+    state.grounded = true;
+    if (state.lockTimer <= 0) {
+      state.lockTimer = LOCK_DELAY;
+    }
+  }
+}
+
+function hardDrop() {
+  const p = state.current;
+  if (!p || state.clearing || state.gameOver) return;
+  let dist = 0;
+  while (!collide(p.matrix, p.x, p.y + 1)) { p.y++; dist++; }
+  addScore(dist * 2);
+  state.grounded = true;
+  state.lockTimer = 0;  // 硬降直接锁定
+  lockPiece();
+}
+
+function doHold() {
+  if (state.gameOver || state.clearing) return;
+  if (!state.current || !state.canHold) return;
+  const curType = state.current.type;
+  if (state.hold) {
+    const swapType = state.hold;
+    state.hold = curType;
+    state.current = createPiece(swapType);
+    if (collide(state.current.matrix, state.current.x, state.current.y)) { triggerGameOver(); return; }
+  } else {
+    state.hold = curType; state.current = null; spawnNext();
+  }
+  state.canHold = false; state.dropTimer = 0;
+  state.lastActionWasRotation = false;
+  state.grounded = false;
+  state.lockTimer = 0;
+  state.lockResets = 0;
+  renderHold();
+}
+
+function lockPiece() {
+  const p = state.current; if (!p) return;
+
+  const isTSpin = p.type === 'T' && state.lastActionWasRotation && checkTSpin(p);
+
+  const N = p.matrix.length;
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      if (!p.matrix[y][x]) continue;
+      const by = p.y + y, bx = p.x + x;
+      if (by >= 0 && by < ROWS && bx >= 0 && bx < COLS) state.board[by][bx] = p.type;
+    }
+  }
+
+  playLockSound();
+  state.current = null; state.canHold = true; state.dropTimer = 0;
+  state.lastActionWasRotation = false;
+  state.grounded = false;
+  state.lockTimer = 0;
+  state.lockResets = 0;
+
+  const fullRows = [];
+  for (let y = 0; y < ROWS; y++) {
+    let full = true;
+    for (let x = 0; x < COLS; x++) if (!state.board[y][x]) { full = false; break; }
+    if (full) fullRows.push(y);
+  }
+
+  if (isTSpin) {
+    playTSpinSound();
+    if (fullRows.length === 0) {
+      addScore(TSPIN_NO_LINE);
+      state.tspinMessage = { text: tspinText(0), start: performance.now() };
+      spawnNext();
+    } else {
+      state.tspinPending = true;
+      state.clearing = { rows: fullRows, start: performance.now() };
+    }
+    return;
+  }
+
+  if (fullRows.length) {
+    state.clearing = { rows: fullRows, start: performance.now() };
+    playClearSound(fullRows.length);
+  } else spawnNext();
+}
+
+function finishClearing() {
+  const rows = state.clearing.rows;
+  const isTSpin = state.tspinPending;
+  state.clearing = null; state.tspinPending = false;
+  const hit = new Set(rows);
+  const kept = [];
+  for (let y = 0; y < ROWS; y++) if (!hit.has(y)) kept.push(state.board[y]);
+  while (kept.length < ROWS) kept.unshift(new Array(COLS).fill(null));
+  state.board = kept;
+  const n = rows.length;
+  if (isTSpin) {
+    addScore(TSPIN_SCORES[n] || 0);
+    state.tspinMessage = { text: tspinText(n), start: performance.now() };
+  } else addScore(LINE_SCORES[n] || 0);
+  state.lines += n;
+  const newLevel = Math.floor(state.lines / 10) + 1;
+  if (newLevel !== state.level) {
+    state.level = newLevel;
+    state.dropInterval = gravityForLevel(state.level);
+  }
+  updateUI();
+  spawnNext();
+}
+
+function spawnNext() {
+  if (state.gameOver) return;
+  refillQueue();
+  const type = state.queue.shift();
+  refillQueue();
+  state.current = createPiece(type);
+  state.lastActionWasRotation = false;
+  state.grounded = false;
+  state.lockTimer = 0;
+  state.lockResets = 0;
+  if (collide(state.current.matrix, state.current.x, state.current.y)) { triggerGameOver(); return; }
+  state.dropTimer = 0;
+  renderNext();
+}
+
+function triggerGameOver() {
+  if (state.gameOver) return;
+  state.gameOver = true; state.current = null;
+  finalScoreEl.textContent = state.score;
+  overlay.classList.add('show');
+}
+
+function restart() {
+  state.board = createBoard();
+  state.current = null; state.queue = []; state.hold = null;
+  state.canHold = true; state.score = 0; state.lines = 0; state.level = 1;
+  state.dropInterval = gravityForLevel(1); state.dropTimer = 0;
+  state.clearing = null; state.gameOver = false; state.started = true;
+  state.lastActionWasRotation = false;
+  state.tspinPending = false;
+  state.tspinMessage = null;
+  state.grounded = false;
+  state.lockTimer = 0;
+  state.lockResets = 0;
+  bag = []; refillQueue();
+  keys.left = keys.right = keys.down = false;
+  repeat.left = { held: false, timer: 0, fired: false };
+  repeat.right = { held: false, timer: 0, fired: false };
+  repeat.down = { held: false, timer: 0 };
+  overlay.classList.remove('show');
+  updateUI(); renderHold();
+  spawnNext();
+  lastTime = performance.now();
+}
+
+/* ============================ 输入控制 ============================ */
+
+const keys = { left: false, right: false, down: false };
+const repeat = {
+  left: { held: false, timer: 0, fired: false },
+  right: { held: false, timer: 0, fired: false },
+  down: { held: false, timer: 0 },
+};
+
+function updateInput(dt) {
+  if (state.gameOver || state.clearing) return;
+  ['left', 'right'].forEach((dir) => {
+    const r = repeat[dir], step = dir === 'left' ? -1 : 1;
+    if (!keys[dir]) { r.held = false; r.fired = false; r.timer = 0; return; }
+    if (!r.held) { r.held = true; r.fired = false; r.timer = 0; return; }
+    r.timer += dt;
+    if (!r.fired) {
+      if (r.timer >= DAS) { r.fired = true; r.timer = 0; move(step); }
+    } else if (r.timer >= ARR) { r.timer = 0; move(step); }
+  });
+  const d = repeat.down;
+  if (keys.down) {
+    if (!d.held) { d.held = true; d.timer = 0; stepDown(true); state.dropTimer = 0; }
+    else {
+      d.timer += dt;
+      if (d.timer >= SOFT_INTERVAL) { d.timer = 0; stepDown(true); state.dropTimer = 0; }
+    }
+  } else { d.held = false; d.timer = 0; }
+}
+
+function handleKeyDown(e) {
+  const code = e.code;
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyC','KeyX','KeyZ'].indexOf(code) !== -1) e.preventDefault();
+  if (code === 'KeyR') { restart(); return; }
+  if (e.repeat) return;
+  if (state.gameOver) return;
+
+  switch (code) {
+    case 'ArrowLeft':
+      if (!keys.left) { keys.left = true; move(-1); repeat.left = { held: true, timer: 0, fired: false }; }
+      break;
+    case 'ArrowRight':
+      if (!keys.right) { keys.right = true; move(1); repeat.right = { held: true, timer: 0, fired: false }; }
+      break;
+    case 'ArrowDown':
+      if (!keys.down) { keys.down = true; repeat.down = { held: false, timer: 0 }; }
+      break;
+
+    // 顺时针旋转：↑ 或 X
+    case 'ArrowUp':
+    case 'KeyX':
+      rotate(1);
+      break;
+
+    // 逆时针旋转：Z 或 Ctrl
+    case 'KeyZ':
+    case 'ControlLeft':
+    case 'ControlRight':
+      rotate(-1);
+      break;
+
+    case 'Space': hardDrop(); break;
+    case 'KeyC': doHold(); break;
+  }
+}
+function handleKeyUp(e) {
+  switch (e.code) {
+    case 'ArrowLeft': keys.left = false; break;
+    case 'ArrowRight': keys.right = false; break;
+    case 'ArrowDown': keys.down = false; break;
+  }
+}
+window.addEventListener('keydown', handleKeyDown);
+window.addEventListener('keyup', handleKeyUp);
+window.addEventListener('blur', () => {
+  keys.left = keys.right = keys.down = false;
+  repeat.left.held = repeat.right.held = repeat.down.held = false;
+});
+
+/* ============================ 主循环与初始化 ============================ */
+
+let lastTime = 0;
+function loop(now) {
+  requestAnimationFrame(loop);
+  if (!lastTime) lastTime = now;
+  let dt = now - lastTime; lastTime = now;
+  if (dt > 100) dt = 100;
+
+  if (state.clearing) {
+    if (now - state.clearing.start >= CLEAR_DURATION) finishClearing();
+  } else if (state.started && !state.gameOver) {
+    updateInput(dt);
+
+    if (state.current) {
+      // 锁定倒计时
+      if (state.grounded && state.lockTimer > 0) {
+        state.lockTimer -= dt;
+        if (state.lockTimer <= 0) {
+          state.lockTimer = 0;
+          lockPiece();
+        }
+      } else {
+        // 正常重力
+        state.dropTimer += dt;
+        if (state.dropTimer >= state.dropInterval) {
+          state.dropTimer = 0;
+          stepDown(false);
+        }
+      }
+    }
+  }
+  renderBoard(now);
+}
+
+function init() {
+  buildSprites();
+  state.board = createBoard();
+  state.dropInterval = gravityForLevel(1);
+  try {
+    const saved = localStorage.getItem('tetris_best');
+    if (saved) state.best = parseInt(saved, 10) || 0;
+  } catch (e) {}
+  updateUI();
+  restart();
+  requestAnimationFrame(loop);
+}
+
+window.addEventListener('pointerdown', getAudioCtx, { once: true });
+window.addEventListener('keydown', getAudioCtx, { once: true });
+restartBtn.addEventListener('click', () => { getAudioCtx(); restart(); });
+init();
+</script>
+</body>
+</html>
