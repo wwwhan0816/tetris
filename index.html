@@ -85,7 +85,6 @@
   }
   .hint .highlight { color: #a78bfa; font-weight: 700; }
 
-  /* ================= 屏幕按钮区 ================= */
   .controls {
     display: flex;
     gap: 10px;
@@ -132,35 +131,125 @@
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
-
-  .ctrl-btn:hover {
-    background: linear-gradient(160deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05));
-    color: #ffffff;
-  }
-
-  .ctrl-btn:active,
-  .ctrl-btn.pressed {
+  .ctrl-btn:hover { background: linear-gradient(160deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05)); color: #ffffff; }
+  .ctrl-btn:active, .ctrl-btn.pressed {
     transform: scale(0.92);
     background: linear-gradient(160deg, rgba(125,211,252,0.35), rgba(99,102,241,0.28));
     box-shadow: 0 0 18px rgba(125,211,252,0.45), inset 0 1px 0 rgba(255,255,255,0.18);
     color: #ffffff;
   }
+  .ctrl-btn.small { width: auto; min-width: 64px; padding: 0 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; }
 
-  .ctrl-btn.small {
-    width: auto;
-    min-width: 64px;
-    padding: 0 14px;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
+  /* ============================================================
+     手机端适配（竖屏）
+     布局变为：
+       [Hold] [Score Best]
+             [Board]
+       [Next] [Lines Level]
+          [Controls]
+     ============================================================ */
+  @media (max-width: 700px) {
+    .app {
+      padding: 8px 8px 6px;
+      gap: 6px;
+      min-height: 100vh;
+      justify-content: flex-start;
+    }
+
+    .layout {
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+    }
+
+    /* 左右两栏变成顶部横条和底部横条 */
+    .side {
+      flex-direction: row;
+      width: 100%;
+      max-width: 480px;
+      gap: 8px;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    .side.left { order: 0; }
+    .side.right { order: 2; }
+    .board-wrap { order: 1; }
+
+    /* 紧凑面板 */
+    .panel {
+      padding: 6px 10px;
+      border-radius: 11px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .panel h3 {
+      font-size: 8px;
+      letter-spacing: 0.14em;
+      margin-bottom: 4px;
+    }
+
+    /* 统计块变成横向，紧凑 */
+    .stats {
+      flex-direction: row;
+      gap: 10px;
+      padding: 8px 12px;
+      align-items: center;
+    }
+    .stat {
+      flex-direction: column;
+      align-items: center;
+      padding: 0;
+      gap: 1px;
+    }
+    .stat span { font-size: 8px; letter-spacing: 0.1em; }
+    .stat b { font-size: 15px; }
+
+    /* 减小棋盘边框占位 */
+    .board-wrap {
+      padding: 6px;
+      border-radius: 14px;
+    }
+    #boardCanvas { border-radius: 9px; }
+
+    /* 按钮区紧凑并放大点击区 */
+    .controls {
+      gap: 6px;
+      padding: 6px;
+      width: 100%;
+      max-width: 480px;
+      justify-content: center;
+    }
+    .ctrl-group {
+      gap: 5px;
+      padding: 4px;
+    }
+    .ctrl-btn {
+      width: 50px;
+      height: 50px;
+      font-size: 19px;
+      border-radius: 9px;
+    }
+    .ctrl-btn.small { min-width: 58px; font-size: 12px; padding: 0 10px; }
+
+    /* 隐藏键盘提示，节省空间 */
+    .hint { display: none; }
   }
 
-  /* 小屏：按钮加大 */
-  @media (max-width: 620px) {
-    .ctrl-btn { width: 58px; height: 58px; font-size: 22px; }
-    .ctrl-btn.small { min-width: 70px; font-size: 14px; }
-    .controls { gap: 8px; }
-    .ctrl-group { gap: 5px; padding: 4px; }
+  /* 超小屏（iPhone SE 等）再紧凑一点 */
+  @media (max-width: 380px) {
+    .app { padding: 6px 6px 4px; gap: 4px; }
+    .panel { padding: 5px 8px; }
+    .ctrl-btn { width: 46px; height: 46px; font-size: 17px; }
+    .ctrl-btn.small { min-width: 52px; font-size: 11px; }
+    .controls { gap: 4px; padding: 4px; }
+    .ctrl-group { gap: 4px; padding: 3px; }
+  }
+
+  /* 横屏时给出提示（可选） */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .app { gap: 4px; padding: 6px; }
+    .hint { display: block; font-size: 10px; }
   }
 </style>
 </head>
@@ -168,7 +257,7 @@
 
 <div class="app">
   <div class="layout">
-    <aside class="side">
+    <aside class="side left">
       <div class="panel"><h3>Hold</h3><canvas id="holdCanvas"></canvas></div>
       <div class="panel stats">
         <div class="stat"><span>SCORE</span><b id="scoreEl">0</b></div>
@@ -183,7 +272,7 @@
         <button id="restartBtn">再来一局</button>
       </div>
     </main>
-    <aside class="side">
+    <aside class="side right">
       <div class="panel"><h3>Next</h3><canvas id="nextCanvas"></canvas></div>
       <div class="panel stats">
         <div class="stat"><span>LINES</span><b id="linesEl">0</b></div>
@@ -192,7 +281,6 @@
     </aside>
   </div>
 
-  <!-- 屏幕按钮 -->
   <div class="controls" id="controls">
     <div class="ctrl-group">
       <button class="ctrl-btn" data-key="ArrowLeft" title="左移">←</button>
@@ -218,10 +306,8 @@
 
 <script>
 /* =========================================================================
- *  俄罗斯方块 Tetris — T-Spin 完整版 + 屏幕按钮
- *  本次新增：
- *    - 把键盘逻辑抽成 pressKey() / releaseKey()，键盘与按钮共用
- *    - 屏幕按钮支持鼠标点击、触摸按住连发
+ *  俄罗斯方块 Tetris — 手机竖屏适配版
+ *  本次新增：resize() 根据屏幕大小动态调整画布显示尺寸
  * ========================================================================= */
 
 const COLS = 10;
@@ -451,6 +537,10 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+/**
+ * 初始化画布：设置内部物理像素（带 DPR），并给一个初始 CSS 显示尺寸。
+ * 后续 resize() 会按屏幕大小覆盖 CSS 显示尺寸。
+ */
 function setupCanvas(canvas, w, h) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = Math.round(w * dpr);
@@ -983,10 +1073,6 @@ function updateInput(dt) {
   } else { d.held = false; d.timer = 0; }
 }
 
-/**
- * 按下某个键（键盘和屏幕按钮共用的入口）
- * @param {string} code 键码，如 'ArrowLeft'、'Space'、'KeyC' ...
- */
 function pressKey(code) {
   if (!code) return;
   if (code === 'KeyR') { restart(); return; }
@@ -994,47 +1080,24 @@ function pressKey(code) {
 
   switch (code) {
     case 'ArrowLeft':
-      if (!keys.left) {
-        keys.left = true;
-        move(-1);
-        repeat.left = { held: true, timer: 0, fired: false };
-      }
+      if (!keys.left) { keys.left = true; move(-1); repeat.left = { held: true, timer: 0, fired: false }; }
       break;
     case 'ArrowRight':
-      if (!keys.right) {
-        keys.right = true;
-        move(1);
-        repeat.right = { held: true, timer: 0, fired: false };
-      }
+      if (!keys.right) { keys.right = true; move(1); repeat.right = { held: true, timer: 0, fired: false }; }
       break;
     case 'ArrowDown':
-      if (!keys.down) {
-        keys.down = true;
-        repeat.down = { held: false, timer: 0 };
-      }
+      if (!keys.down) { keys.down = true; repeat.down = { held: false, timer: 0 }; }
       break;
     case 'ArrowUp':
-    case 'KeyX':
-      rotate(1);
-      break;
+    case 'KeyX': rotate(1); break;
     case 'KeyZ':
     case 'ControlLeft':
-    case 'ControlRight':
-      rotate(-1);
-      break;
-    case 'Space':
-      hardDrop();
-      break;
-    case 'KeyC':
-      doHold();
-      break;
+    case 'ControlRight': rotate(-1); break;
+    case 'Space': hardDrop(); break;
+    case 'KeyC': doHold(); break;
   }
 }
 
-/**
- * 释放某个键（键盘和屏幕按钮共用的入口）
- * @param {string} code
- */
 function releaseKey(code) {
   if (!code) return;
   switch (code) {
@@ -1049,13 +1112,11 @@ function handleKeyDown(e) {
   if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyC','KeyX','KeyZ'].indexOf(code) !== -1) {
     e.preventDefault();
   }
-  if (e.repeat) return;   // 忽略操作系统自动重复
+  if (e.repeat) return;
   pressKey(code);
 }
 
-function handleKeyUp(e) {
-  releaseKey(e.code);
-}
+function handleKeyUp(e) { releaseKey(e.code); }
 
 window.addEventListener('keydown', handleKeyDown);
 window.addEventListener('keyup', handleKeyUp);
@@ -1072,7 +1133,6 @@ function bindControls() {
     const key = btn.dataset.key;
     if (!key) return;
 
-    // 按下：无论鼠标还是触摸都走 pointerdown
     btn.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       try { btn.setPointerCapture(e.pointerId); } catch (err) {}
@@ -1080,7 +1140,6 @@ function bindControls() {
       pressKey(key);
     });
 
-    // 抬起 / 取消：释放按键
     const release = () => {
       btn.classList.remove('pressed');
       releaseKey(key);
@@ -1088,13 +1147,69 @@ function bindControls() {
 
     btn.addEventListener('pointerup', release);
     btn.addEventListener('pointercancel', release);
-    // 鼠标移出按钮时也释放（触摸端因为 capture 不需要）
     btn.addEventListener('pointerleave', (e) => {
       if (btn.hasPointerCapture && btn.hasPointerCapture(e.pointerId)) return;
       release();
     });
   });
 }
+
+/* ============================ 尺寸自适应 ============================ */
+
+/**
+ * 根据屏幕大小动态调整画布的 CSS 显示尺寸。
+ * 画布内部物理像素始终保持不变（由 setupCanvas 决定），
+ * 这里只改 CSS 显示尺寸，图像会被浏览器缩放，清晰度依然足够。
+ */
+function resize() {
+  const isMobile = window.innerWidth <= 700;
+
+  if (isMobile) {
+    const vh = window.innerHeight;
+    const vw = window.innerWidth;
+
+    // 预留空间：顶部信息条 + 底部按钮区 + 页面边距
+    // 数值根据 CSS 布局估算，可微调
+    const topBar = 92;      // Hold/Score 横条约 92px
+    const bottomBar = 92;   // Next/Lines 横条约 92px
+    const controlsH = 130;  // 按钮区约 130px（含内边距）
+    const margins = 40;     // 页面上下 padding + 间距
+
+    const reserved = topBar + bottomBar + controlsH + margins;
+    const availableH = vh - reserved;
+    const availableW = vw - 24;      // 左右各 12px
+
+    // 棋盘宽高比 10:20 = 1:2
+    let boardH = Math.min(availableH, availableW * 2);
+    let boardW = boardH / 2;
+
+    // 兜底最小值，避免极端窄屏
+    if (boardH < 300) { boardH = 300; boardW = 150; }
+
+    boardCanvas.style.width = boardW + 'px';
+    boardCanvas.style.height = boardH + 'px';
+
+    // Hold / Next 迷你画布缩小
+    holdCanvas.style.width = '60px';
+    holdCanvas.style.height = '38px';
+    nextCanvas.style.width = '56px';
+    nextCanvas.style.height = '90px';
+  } else {
+    // 桌面端恢复原始尺寸
+    boardCanvas.style.width = '300px';
+    boardCanvas.style.height = '600px';
+    holdCanvas.style.width = '120px';
+    holdCanvas.style.height = '76px';
+    nextCanvas.style.width = '120px';
+    nextCanvas.style.height = '192px';
+  }
+}
+
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => {
+  // 旋转屏幕后延迟调用，等待浏览器完成布局
+  setTimeout(resize, 250);
+});
 
 /* ============================ 主循环与初始化 ============================ */
 
@@ -1139,7 +1254,8 @@ function init() {
   } catch (e) {}
   updateUI();
 
-  bindControls();   // 绑定屏幕按钮
+  bindControls();
+  resize();            // 初始自适应
 
   restart();
   requestAnimationFrame(loop);
