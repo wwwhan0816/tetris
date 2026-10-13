@@ -7,17 +7,49 @@
 <style>
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
+
+  /* ================= 主题变量 ================= */
+  body {
+    --bg-base: #1b1e26;
+    --spot1: rgba(99,102,241,0.20);
+    --spot2: rgba(56,189,248,0.14);
+    --grad1: #242833;
+    --grad2: #1a1d25;
+    --grad3: #15171d;
+    --board-glow: rgba(96,165,250,0.10);
+  }
+  body[data-theme="violet"] {
+    --bg-base: #1a1626;
+    --spot1: rgba(139,92,246,0.26);
+    --spot2: rgba(236,72,153,0.16);
+    --grad1: #2b2138;
+    --grad2: #1a1424;
+    --grad3: #100c17;
+    --board-glow: rgba(167,139,250,0.16);
+  }
+  body[data-theme="ocean"] {
+    --bg-base: #0f1e22;
+    --spot1: rgba(20,184,166,0.24);
+    --spot2: rgba(56,189,248,0.18);
+    --grad1: #1a2c31;
+    --grad2: #102026;
+    --grad3: #08141a;
+    --board-glow: rgba(34,211,238,0.16);
+  }
+
   body {
     display: flex; align-items: center; justify-content: center;
-    min-height: 100vh; background: #1b1e26;
+    min-height: 100vh;
+    background: var(--bg-base);
     background-image:
-      radial-gradient(1100px 620px at 12% -12%, rgba(99,102,241,0.20), transparent 62%),
-      radial-gradient(900px 560px at 102% 104%, rgba(56,189,248,0.14), transparent 60%),
-      linear-gradient(160deg, #242833 0%, #1a1d25 55%, #15171d 100%);
+      radial-gradient(1100px 620px at 12% -12%, var(--spot1), transparent 62%),
+      radial-gradient(900px 560px at 102% 104%, var(--spot2), transparent 60%),
+      linear-gradient(160deg, var(--grad1) 0%, var(--grad2) 55%, var(--grad3) 100%);
     font-family: "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
     color: #e8ecf5; user-select: none; -webkit-user-select: none;
     -webkit-font-smoothing: antialiased; overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
+    transition: background-color .35s ease;
   }
   .app { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px; }
 
@@ -42,36 +74,22 @@
     color: #eef2fb; text-shadow: 0 0 14px rgba(120,170,255,0.45);
   }
 
-  /* ================= 消息面板（放在左侧栏，分数下方） ================= */
+  /* ================= 消息面板 ================= */
   .message-panel {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 62px;
-    padding: 10px 8px;
-    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 62px; padding: 10px 8px; overflow: hidden;
   }
   .message-text {
-    font-size: 13px;
-    font-weight: 900;
-    letter-spacing: 0.06em;
-    line-height: 1.15;
-    text-align: center;
-    opacity: 0;
-    transform: translateY(4px) scale(0.94);
+    font-size: 13px; font-weight: 900;
+    letter-spacing: 0.06em; line-height: 1.15; text-align: center;
+    opacity: 0; transform: translateY(4px) scale(0.94);
     transition: opacity .18s ease, transform .24s cubic-bezier(0.22, 1.2, 0.36, 1);
     background: linear-gradient(135deg, #7dd3fc, #a78bfa 60%, #f472b6);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
     text-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
     white-space: nowrap;
   }
-  .message-text.show {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  /* 不同消行档次的配色 */
+  .message-text.show { opacity: 1; transform: translateY(0) scale(1); }
   .message-text.single  { background: linear-gradient(135deg, #6ee7b7, #34d399); -webkit-background-clip: text; background-clip: text; text-shadow: 0 0 16px rgba(52,211,153,0.55); }
   .message-text.double  { background: linear-gradient(135deg, #7dd3fc, #3b82f6); -webkit-background-clip: text; background-clip: text; text-shadow: 0 0 16px rgba(59,130,246,0.55); }
   .message-text.triple  { background: linear-gradient(135deg, #c084fc, #a855f7); -webkit-background-clip: text; background-clip: text; text-shadow: 0 0 18px rgba(168,85,247,0.6); }
@@ -82,7 +100,7 @@
     position: relative; padding: 8px; border-radius: 18px;
     background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.012));
     border: 1px solid rgba(255,255,255,0.11);
-    box-shadow: 0 26px 60px rgba(0,0,0,0.58), 0 0 70px rgba(96,165,250,0.10),
+    box-shadow: 0 26px 60px rgba(0,0,0,0.58), 0 0 70px var(--board-glow),
                 inset 0 1px 0 rgba(255,255,255,0.08);
   }
   #boardCanvas { display: block; border-radius: 11px; box-shadow: inset 0 0 40px rgba(0,0,0,0.6); }
@@ -130,37 +148,10 @@
   }
   .hint .highlight { color: #a78bfa; font-weight: 700; }
 
-  /* ================= 左上角浮动「重开」按钮 ================= */
-  .restart-fab {
+  /* ================= 顶部浮动按钮 ================= */
+  .restart-fab, .settings-fab, .pause-fab {
     position: fixed;
-    top: 14px; left: 14px;
-    width: 44px; height: 44px; padding: 0;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.14);
-    background: linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
-    color: #cfd8e8;
-    cursor: pointer;
-    z-index: 100;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    transition: transform .22s ease, color .18s ease, background .18s ease, box-shadow .22s ease;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-  .restart-fab svg { width: 22px; height: 22px; display: block; }
-  .restart-fab:hover {
-    color: #ffffff;
-    background: linear-gradient(160deg, rgba(125,211,252,0.30), rgba(99,102,241,0.22));
-    box-shadow: 0 8px 24px rgba(56,189,248,0.45), inset 0 1px 0 rgba(255,255,255,0.16);
-    transform: rotate(-35deg);
-  }
-  .restart-fab:active { transform: scale(0.92) rotate(-35deg); }
-
-  /* ================= 右上角浮动「暂停」按钮 ================= */
-  .pause-fab {
-    position: fixed;
-    top: 14px; right: 14px;
+    top: calc(14px + env(safe-area-inset-top, 0px));
     width: 44px; height: 44px; padding: 0;
     display: flex; align-items: center; justify-content: center;
     border-radius: 50%;
@@ -175,20 +166,38 @@
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
+  .restart-fab svg, .settings-fab svg { width: 22px; height: 22px; display: block; }
   .pause-fab svg { width: 20px; height: 20px; display: block; }
-  /* 暂停图标 / 播放图标 通过 active 类切换 */
+
+  .restart-fab { left: 14px; }
+  .settings-fab { right: 70px; }
+  .pause-fab { right: 14px; }
+
+  .restart-fab:hover {
+    color: #ffffff;
+    background: linear-gradient(160deg, rgba(125,211,252,0.30), rgba(99,102,241,0.22));
+    box-shadow: 0 8px 24px rgba(56,189,248,0.45), inset 0 1px 0 rgba(255,255,255,0.16);
+    transform: rotate(-35deg);
+  }
+  .restart-fab:active { transform: scale(0.92) rotate(-35deg); }
+
+  .settings-fab:hover {
+    color: #ffffff;
+    background: linear-gradient(160deg, rgba(167,139,250,0.32), rgba(99,102,241,0.24));
+    box-shadow: 0 8px 24px rgba(167,139,250,0.5), inset 0 1px 0 rgba(255,255,255,0.16);
+    transform: rotate(60deg);
+  }
+  .settings-fab:active { transform: scale(0.92) rotate(60deg); }
+
   .pause-fab .icon-play { display: none; }
   .pause-fab.active .icon-pause { display: none; }
   .pause-fab.active .icon-play { display: block; }
-
   .pause-fab:hover {
     color: #ffffff;
     background: linear-gradient(160deg, rgba(125,211,252,0.30), rgba(99,102,241,0.22));
     box-shadow: 0 8px 24px rgba(56,189,248,0.45), inset 0 1px 0 rgba(255,255,255,0.16);
   }
   .pause-fab:active { transform: scale(0.92); }
-
-  /* 暂停状态：暖金色高亮 */
   .pause-fab.active {
     color: #fff7ed;
     background: linear-gradient(160deg, rgba(251,191,36,0.32), rgba(245,158,11,0.22));
@@ -198,13 +207,9 @@
 
   /* ================= 屏幕按钮区 ================= */
   .controls {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: stretch;
-    padding: 8px;
-    border-radius: 16px;
+    display: flex; gap: 10px; flex-wrap: wrap;
+    justify-content: center; align-items: stretch;
+    padding: 8px; border-radius: 16px;
     background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
     border: 1px solid rgba(255,255,255,0.07);
     box-shadow: 0 10px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
@@ -241,95 +246,298 @@
   .ctrl-btn.small { width: auto; min-width: 64px; padding: 0 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; }
   .ctrl-btn.wide  { min-width: 110px; }
 
+  /* ================= 设置面板 ================= */
+  .settings-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(8,10,16,0.72);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    opacity: 0; visibility: hidden;
+    transition: opacity .26s ease, visibility .26s ease;
+    z-index: 200;
+  }
+  .settings-backdrop.show { opacity: 1; visibility: visible; }
+
+  .settings-panel {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.94);
+    width: min(420px, calc(100vw - 32px));
+    max-height: calc(100vh - 60px);
+    display: flex; flex-direction: column;
+    background: linear-gradient(160deg, #262a35 0%, #1a1d26 100%);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 18px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 60px var(--board-glow, rgba(96,165,250,0.1)),
+                inset 0 1px 0 rgba(255,255,255,0.08);
+    opacity: 0; visibility: hidden;
+    transition: opacity .26s ease, visibility .26s ease, transform .3s cubic-bezier(0.22, 1.2, 0.36, 1);
+    z-index: 210;
+    overflow: hidden;
+  }
+  .settings-panel.show {
+    opacity: 1; visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .settings-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .settings-header h2 {
+    margin: 0; font-size: 16px; font-weight: 800;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    background: linear-gradient(135deg, #7dd3fc, #a78bfa 60%, #f472b6);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .settings-close {
+    width: 32px; height: 32px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: #b8c2d8;
+    font-size: 20px; line-height: 1;
+    cursor: pointer;
+    box-shadow: none;
+    transition: background .15s ease, color .15s ease;
+  }
+  .settings-close:hover { background: rgba(255,255,255,0.12); color: #fff; transform: none; }
+
+  .settings-body {
+    padding: 16px 20px 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .settings-section { margin-bottom: 22px; }
+  .settings-section:last-child { margin-bottom: 0; }
+  .settings-section h3 {
+    margin: 0 0 12px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase; color: #7b85a0;
+  }
+
+  /* 主题选项 */
+  .theme-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .theme-option {
+    padding: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    color: #b8c2d8;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.04em;
+    box-shadow: none;
+    transition: border-color .2s ease, color .2s ease, transform .16s ease;
+  }
+  .theme-option:hover { transform: translateY(-2px); color: #fff; box-shadow: none; }
+  .theme-option.selected { border-color: #a78bfa; color: #fff; }
+  .theme-preview {
+    width: 100%;
+    height: 62px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .theme-preview::after {
+    content: '';
+    position: absolute;
+    inset: 6px 12px auto 12px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.18);
+  }
+  .theme-classic {
+    background:
+      radial-gradient(circle at 20% 15%, rgba(99,102,241,0.55), transparent 55%),
+      radial-gradient(circle at 85% 95%, rgba(56,189,248,0.45), transparent 55%),
+      linear-gradient(160deg, #242833 0%, #1a1d25 55%, #15171d 100%);
+  }
+  .theme-violet {
+    background:
+      radial-gradient(circle at 20% 15%, rgba(139,92,246,0.6), transparent 55%),
+      radial-gradient(circle at 85% 95%, rgba(236,72,153,0.45), transparent 55%),
+      linear-gradient(160deg, #2b2138 0%, #1a1424 55%, #100c17 100%);
+  }
+  .theme-ocean {
+    background:
+      radial-gradient(circle at 20% 15%, rgba(20,184,166,0.55), transparent 55%),
+      radial-gradient(circle at 85% 95%, rgba(56,189,248,0.45), transparent 55%),
+      linear-gradient(160deg, #1a2c31 0%, #102026 55%, #08141a 100%);
+  }
+
+  /* 键位列表 */
+  .keybind-list { display: flex; flex-direction: column; gap: 6px; }
+  .keybind-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 9px;
+  }
+  .keybind-label {
+    font-size: 12.5px; font-weight: 600; color: #cfd8e8;
+    letter-spacing: 0.03em;
+  }
+  .keybind-btn {
+    min-width: 84px; height: 32px; padding: 0 12px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: inherit; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.06em; color: #e8ecf5;
+    background: linear-gradient(160deg, rgba(255,255,255,0.11), rgba(255,255,255,0.04));
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 7px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+    text-transform: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .keybind-btn:hover {
+    background: linear-gradient(160deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
+    color: #fff; transform: none; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .keybind-btn.capturing {
+    background: linear-gradient(160deg, rgba(251,191,36,0.32), rgba(245,158,11,0.18));
+    border-color: rgba(251,191,36,0.5);
+    color: #fff7ed;
+    animation: pulse 1s infinite ease-in-out;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.4); }
+    50%      { box-shadow: 0 0 0 6px rgba(251,191,36,0); }
+  }
+
+  .reset-keys {
+    margin-top: 12px;
+    padding: 8px 16px;
+    font-size: 12px;
+    background: linear-gradient(160deg, rgba(255,255,255,0.09), rgba(255,255,255,0.03));
+    color: #cfd8e8;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    box-shadow: none;
+    letter-spacing: 0.05em;
+  }
+  .reset-keys:hover {
+    background: linear-gradient(160deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05));
+    color: #fff;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: 20px; left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    padding: 10px 20px;
+    background: rgba(20,24,32,0.94);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 10px;
+    color: #fde047;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    opacity: 0; visibility: hidden;
+    transition: opacity .22s ease, transform .28s ease, visibility .22s ease;
+    z-index: 300;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1; visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+
   /* ============================================================
-     手机端适配（竖屏）
+     手机端适配
      ============================================================ */
   @media (max-width: 700px) {
     .app {
-      padding: 58px 8px 6px;
-      gap: 6px;
-      min-height: 100vh;
-      justify-content: flex-start;
+      padding: calc(58px + env(safe-area-inset-top, 0px)) 8px 6px;
+      gap: 6px; min-height: 100vh; justify-content: flex-start;
     }
-    .restart-fab { width: 46px; height: 46px; top: 8px; left: 10px; }
-    .restart-fab svg { width: 22px; height: 22px; }
-    .pause-fab   { width: 46px; height: 46px; top: 8px; right: 10px; }
+    .restart-fab, .settings-fab, .pause-fab {
+      width: 46px; height: 46px;
+      top: calc(8px + env(safe-area-inset-top, 0px));
+    }
+    .restart-fab svg, .settings-fab svg { width: 22px; height: 22px; }
     .pause-fab svg { width: 21px; height: 21px; }
+    .restart-fab { left: 10px; }
+    .settings-fab { right: 62px; }
+    .pause-fab { right: 10px; }
 
-    .layout {
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      width: 100%;
-    }
+    .layout { flex-direction: column; align-items: center; gap: 6px; width: 100%; }
     .side {
-      flex-direction: row;
-      width: 100%;
-      max-width: 480px;
-      gap: 8px;
-      justify-content: center;
-      align-items: stretch;
+      flex-direction: row; width: 100%; max-width: 480px;
+      gap: 8px; justify-content: center; align-items: stretch;
     }
     .side.left { order: 0; }
     .side.right { order: 2; }
     .board-wrap { order: 1; }
 
     .panel {
-      padding: 6px 10px;
-      border-radius: 11px;
+      padding: 6px 10px; border-radius: 11px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
     }
     .panel h3 { font-size: 8px; letter-spacing: 0.14em; margin-bottom: 4px; }
 
     .stats {
-      flex-direction: row;
-      gap: 10px;
-      padding: 8px 12px;
-      align-items: center;
+      flex-direction: row; gap: 10px; padding: 8px 12px; align-items: center;
     }
     .stat { flex-direction: column; align-items: center; padding: 0; gap: 1px; }
     .stat span { font-size: 8px; letter-spacing: 0.1em; }
     .stat b { font-size: 15px; }
 
-    /* 消息面板在手机端：横条右侧，占剩余宽度 */
-    .message-panel {
-      flex: 1;
-      min-width: 0;
-      min-height: 44px;
-      padding: 6px 8px;
-    }
-    .message-text {
-      font-size: 12px;
-      letter-spacing: 0.04em;
-    }
+    .message-panel { flex: 1; min-width: 0; min-height: 44px; padding: 6px 8px; }
+    .message-text { font-size: 12px; letter-spacing: 0.04em; }
     .message-text.tetris { font-size: 14px; }
 
     .board-wrap { padding: 6px; border-radius: 14px; }
     #boardCanvas { border-radius: 9px; }
 
     .controls {
-      gap: 6px;
-      padding: 6px;
-      width: 100%;
-      max-width: 480px;
-      justify-content: center;
+      gap: 6px; padding: 6px;
+      width: 100%; max-width: 480px; justify-content: center;
     }
     .ctrl-group { gap: 5px; padding: 4px; }
-    .ctrl-btn {
-      width: 50px; height: 50px;
-      font-size: 19px;
-      border-radius: 9px;
-    }
+    .ctrl-btn { width: 50px; height: 50px; font-size: 19px; border-radius: 9px; }
     .ctrl-btn.small { min-width: 58px; font-size: 12px; padding: 0 10px; }
     .ctrl-btn.wide  { min-width: 120px; }
 
     .hint { display: none; }
+
+    /* 设置面板：手机端更贴合 */
+    .settings-panel { width: calc(100vw - 20px); max-height: calc(100vh - 40px); }
+    .settings-header { padding: 14px 16px 10px; }
+    .settings-header h2 { font-size: 15px; }
+    .settings-body { padding: 14px 16px 18px; }
+    .theme-options { gap: 8px; }
+    .theme-preview { height: 52px; }
+    .theme-option { font-size: 10.5px; }
+    .keybind-row { padding: 8px 10px; }
+    .keybind-label { font-size: 12px; }
+    .keybind-btn { min-width: 78px; font-size: 11.5px; }
   }
 
   @media (max-width: 380px) {
-    .app { padding: 54px 6px 4px; gap: 4px; }
-    .restart-fab { width: 42px; height: 42px; top: 6px; left: 8px; }
-    .pause-fab   { width: 42px; height: 42px; top: 6px; right: 8px; }
+    .app { padding: calc(54px + env(safe-area-inset-top, 0px)) 6px 4px; gap: 4px; }
+    .restart-fab, .settings-fab, .pause-fab {
+      width: 42px; height: 42px;
+      top: calc(6px + env(safe-area-inset-top, 0px));
+    }
+    .restart-fab { left: 8px; }
+    .settings-fab { right: 58px; }
+    .pause-fab { right: 8px; }
     .panel { padding: 5px 8px; }
     .ctrl-btn { width: 46px; height: 46px; font-size: 17px; }
     .ctrl-btn.small { min-width: 52px; font-size: 11px; }
@@ -338,10 +546,12 @@
     .ctrl-group { gap: 4px; padding: 3px; }
     .message-text { font-size: 11px; }
     .message-text.tetris { font-size: 13px; }
+    .theme-preview { height: 44px; }
+    .theme-option { font-size: 9.5px; }
   }
 </style>
 </head>
-<body>
+<body data-theme="classic">
 
 <!-- 左上角浮动重开按钮 -->
 <button class="restart-fab" id="restartFab" title="重新开始" aria-label="重新开始">
@@ -349,6 +559,15 @@
        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M21 12a9 9 0 1 1-2.64-6.36"/>
     <polyline points="21 3 21 9 15 9"/>
+  </svg>
+</button>
+
+<!-- 右上角浮动设置按钮（暂停左边） -->
+<button class="settings-fab" id="settingsFab" title="设置" aria-label="设置">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
   </svg>
 </button>
 
@@ -371,7 +590,6 @@
         <div class="stat"><span>SCORE</span><b id="scoreEl">0</b></div>
         <div class="stat"><span>BEST</span><b id="bestEl">0</b></div>
       </div>
-      <!-- 消息面板：位于分数下方 -->
       <div class="panel message-panel">
         <span class="message-text" id="messageText"></span>
       </div>
@@ -399,29 +617,66 @@
 
   <div class="controls" id="controls">
     <div class="ctrl-group">
-      <button class="ctrl-btn" data-key="ArrowLeft" title="左移">←</button>
-      <button class="ctrl-btn" data-key="ArrowRight" title="右移">→</button>
-      <button class="ctrl-btn" data-key="ArrowDown" title="软降">↓</button>
+      <button class="ctrl-btn" data-action="moveLeft" title="左移">←</button>
+      <button class="ctrl-btn" data-action="moveRight" title="右移">→</button>
+      <button class="ctrl-btn" data-action="softDrop" title="软降">↓</button>
     </div>
     <div class="ctrl-group">
-      <button class="ctrl-btn" data-key="KeyZ" title="逆时针旋转">↺</button>
-      <button class="ctrl-btn" data-key="ArrowUp" title="顺时针旋转">↻</button>
-      <button class="ctrl-btn" data-key="Space" title="硬降">⇓</button>
+      <button class="ctrl-btn" data-action="rotateCCW" title="逆时针旋转">↺</button>
+      <button class="ctrl-btn" data-action="rotateCW" title="顺时针旋转">↻</button>
+      <button class="ctrl-btn" data-action="hardDrop" title="硬降">⇓</button>
     </div>
     <div class="ctrl-group">
-      <button class="ctrl-btn small wide" data-key="KeyC" title="暂存">暂存</button>
+      <button class="ctrl-btn small wide" data-action="hold" title="暂存">暂存</button>
     </div>
   </div>
 
   <div class="hint">
     <kbd>←</kbd><kbd>→</kbd> 移动 · <kbd>↓</kbd> 软降 · <kbd>空格</kbd> 硬降 · <kbd>C</kbd> 暂存 · <kbd>P</kbd>/<kbd>Esc</kbd> 暂停 · <kbd>R</kbd> 重开<br>
-    <span class="highlight">旋转：<kbd>↑</kbd>/<kbd>X</kbd> 顺时针 · <kbd>Z</kbd>/<kbd>Ctrl</kbd> 逆时针</span>
+    <span class="highlight">旋转：<kbd>↑</kbd>/<kbd>X</kbd> 顺时针 · <kbd>Z</kbd>/<kbd>Ctrl</kbd> 逆时针 · 键位可在设置中自定义</span>
   </div>
 </div>
 
+<!-- 设置面板 -->
+<div class="settings-backdrop" id="settingsBackdrop"></div>
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-header">
+    <h2>Settings</h2>
+    <button class="settings-close" id="settingsClose" aria-label="关闭">×</button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-section">
+      <h3>界面主题</h3>
+      <div class="theme-options" id="themeOptions">
+        <button class="theme-option" data-theme="classic">
+          <div class="theme-preview theme-classic"></div>
+          <span>经典深灰</span>
+        </button>
+        <button class="theme-option" data-theme="violet">
+          <div class="theme-preview theme-violet"></div>
+          <span>午夜紫罗兰</span>
+        </button>
+        <button class="theme-option" data-theme="ocean">
+          <div class="theme-preview theme-ocean"></div>
+          <span>深海青绿</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>键位设置（桌面端）</h3>
+      <div class="keybind-list" id="keybindList"></div>
+      <button class="reset-keys" id="resetKeys">恢复默认键位</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 <script>
 /* =========================================================================
- *  俄罗斯方块 Tetris — 消息外置（左侧栏）+ 暂停浮动按钮（右上角）
+ *  俄罗斯方块 Tetris — 设置面板（主题 / 键位自定义）
  * ========================================================================= */
 
 const COLS = 10;
@@ -499,6 +754,38 @@ const T_EXTRA_KICKS = (function () {
 const LINE_SCORES  = { 1: 100, 2: 300, 3: 500, 4: 800 };
 const TSPIN_SCORES = { 1: 800, 2: 1200, 3: 1600 };
 const TSPIN_NO_LINE = 400;
+
+/* ======================= 主题 & 键位数据 ======================= */
+
+const THEME_DATA = {
+  classic: { boardBg1: '#1a1e28', boardBg2: '#0f1218', grid: 'rgba(255,255,255,0.045)' },
+  violet:  { boardBg1: '#1e1930', boardBg2: '#0f0c1a', grid: 'rgba(255,255,255,0.055)' },
+  ocean:   { boardBg1: '#14262a', boardBg2: '#081418', grid: 'rgba(255,255,255,0.055)' },
+};
+
+const DEFAULT_KEYBINDS = {
+  moveLeft:   'ArrowLeft',
+  moveRight:  'ArrowRight',
+  softDrop:   'ArrowDown',
+  rotateCW:   'ArrowUp',
+  rotateCCW:  'KeyZ',
+  hardDrop:   'Space',
+  hold:       'KeyC',
+  pause:      'KeyP',
+  restart:    'KeyR',
+};
+
+const ACTION_LABELS = {
+  moveLeft:   '左移',
+  moveRight:  '右移',
+  softDrop:   '软降',
+  rotateCW:   '顺时针旋转',
+  rotateCCW:  '逆时针旋转',
+  hardDrop:   '硬降',
+  hold:       '暂存',
+  pause:      '暂停 / 继续',
+  restart:    '重新开始',
+};
 
 /* ============================ 音效 ============================ */
 
@@ -737,15 +1024,20 @@ function drawClearingCell(x, y, type, p) {
 
 function renderBoard(now) {
   const W = COLS * BLOCK, H = ROWS * BLOCK;
+  const theme = THEME_DATA[state.theme] || THEME_DATA.classic;
+
   boardCtx.clearRect(0, 0, W, H);
   const bg = boardCtx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#1a1e28'); bg.addColorStop(1, '#0f1218');
+  bg.addColorStop(0, theme.boardBg1);
+  bg.addColorStop(1, theme.boardBg2);
   boardCtx.fillStyle = bg; boardCtx.fillRect(0, 0, W, H);
-  boardCtx.strokeStyle = 'rgba(255,255,255,0.045)'; boardCtx.lineWidth = 1;
+
+  boardCtx.strokeStyle = theme.grid; boardCtx.lineWidth = 1;
   boardCtx.beginPath();
   for (let x = 1; x < COLS; x++) { boardCtx.moveTo(x * BLOCK + 0.5, 0); boardCtx.lineTo(x * BLOCK + 0.5, H); }
   for (let y = 1; y < ROWS; y++) { boardCtx.moveTo(0, y * BLOCK + 0.5); boardCtx.lineTo(W, y * BLOCK + 0.5); }
   boardCtx.stroke();
+
   const clearRows = state.clearing ? state.clearing.rows : null;
   const clearP = state.clearing ? Math.min(1, (now - state.clearing.start) / CLEAR_DURATION) : 0;
   for (let y = 0; y < ROWS; y++) {
@@ -756,6 +1048,7 @@ function renderBoard(now) {
       else drawCell(t, x * BLOCK, y * BLOCK, 1);
     }
   }
+
   const p = state.current;
   if (!state.clearing && p && !state.gameOver) {
     if (!state.paused) {
@@ -815,7 +1108,7 @@ function renderMini(ctx, w, h, types, cell) {
 function renderNext() { renderMini(nextCtx, NEXT_W, NEXT_H, state.queue.slice(0, 3), 16); }
 function renderHold() { renderMini(holdCtx, HOLD_W, HOLD_H, state.hold ? [state.hold] : [], 20); }
 
-/* ============================ 消息显示（左侧栏） ============================ */
+/* ============================ 消息 ============================ */
 
 const messageText = document.getElementById('messageText');
 let messageTimer = null;
@@ -824,7 +1117,7 @@ function showMessage(text, variant) {
   if (!messageText) return;
   if (messageTimer) { clearTimeout(messageTimer); messageTimer = null; }
   messageText.className = 'message-text';
-  void messageText.offsetWidth;     // 强制重排，动画重播
+  void messageText.offsetWidth;
   messageText.textContent = text;
   if (variant) messageText.classList.add(variant);
   messageText.classList.add('show');
@@ -851,7 +1144,19 @@ function showTSpinMessage(n) {
   showMessage(text, 'tspin');
 }
 
-/* ============================ 游戏逻辑 ============================ */
+/* ============================ Toast ============================ */
+
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function showToast(msg) {
+  if (!toastEl) return;
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1600);
+}
+
+/* ============================ 游戏状态 ============================ */
 
 const state = {
   board: [], current: null, queue: [], hold: null, canHold: true,
@@ -861,71 +1166,213 @@ const state = {
   lastActionWasRotation: false, tspinPending: false,
   grounded: false, lockTimer: 0, lockResets: 0,
   paused: false,
+
+  // 设置相关
+  theme: 'classic',
+  settingsOpen: false,
+  capturingAction: null,
 };
 
 let bag = [];
+let keybinds = { ...DEFAULT_KEYBINDS };
 
-function createBoard() { return Array.from({ length: ROWS }, () => new Array(COLS).fill(null)); }
-function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-function refillQueue() {
-  while (state.queue.length < 6) {
-    if (!bag.length) bag = shuffle(TYPES.slice());
-    state.queue.push(bag.pop());
-  }
-}
-function rotateMatrix(m, dir) {
-  const N = m.length;
-  const out = Array.from({ length: N }, () => new Array(N).fill(0));
-  for (let y = 0; y < N; y++) {
-    for (let x = 0; x < N; x++) {
-      if (dir > 0) out[x][N - 1 - y] = m[y][x];
-      else out[N - 1 - x][y] = m[y][x];
+/* ======================= 设置：加载与保存 ======================= */
+
+function loadSettings() {
+  try {
+    const savedTheme = localStorage.getItem('tetris_theme');
+    if (savedTheme && THEME_DATA[savedTheme]) {
+      state.theme = savedTheme;
+    } else {
+      state.theme = 'classic';
     }
-  }
-  return out;
-}
-function createPiece(type) {
-  const matrix = SHAPES[type].map((row) => row.slice());
-  const w = matrix.length;
-  return { type, matrix, x: Math.floor((COLS - w) / 2), y: 0, rot: 0 };
-}
-function collide(matrix, px, py) {
-  const N = matrix.length;
-  for (let y = 0; y < N; y++) {
-    for (let x = 0; x < N; x++) {
-      if (!matrix[y][x]) continue;
-      const bx = px + x, by = py + y;
-      if (bx < 0 || bx >= COLS || by >= ROWS) return true;
-      if (by >= 0 && state.board[by][bx]) return true;
+    document.body.dataset.theme = state.theme;
+
+    const savedKeys = localStorage.getItem('tetris_keybinds');
+    if (savedKeys) {
+      const parsed = JSON.parse(savedKeys);
+      Object.keys(DEFAULT_KEYBINDS).forEach((action) => {
+        if (typeof parsed[action] === 'string') keybinds[action] = parsed[action];
+      });
     }
+  } catch (e) {
+    state.theme = 'classic';
+    document.body.dataset.theme = 'classic';
   }
-  return false;
-}
-function gravityForLevel(level) {
-  const table = [1000, 850, 720, 600, 490, 400, 320, 250, 190, 140, 100, 80, 65, 55, 45];
-  return table[Math.min(level - 1, table.length - 1)];
 }
 
-function checkTSpin(piece) {
-  const corners = [
-    [piece.x, piece.y], [piece.x + 2, piece.y],
-    [piece.x, piece.y + 2], [piece.x + 2, piece.y + 2],
-  ];
-  let occupied = 0;
-  for (const [cx, cy] of corners) {
-    if (cx < 0 || cx >= COLS || cy < 0 || cy >= ROWS) occupied++;
-    else if (state.board[cy][cx]) occupied++;
-  }
-  return occupied >= 3;
+function saveTheme(name) {
+  try { localStorage.setItem('tetris_theme', name); } catch (e) {}
 }
 
-/* -------- UI -------- */
+function saveKeybinds() {
+  try { localStorage.setItem('tetris_keybinds', JSON.stringify(keybinds)); } catch (e) {}
+}
+
+/* ======================= 按键显示格式化 ======================= */
+
+function formatKey(code) {
+  const special = {
+    'ArrowLeft': '←', 'ArrowRight': '→', 'ArrowUp': '↑', 'ArrowDown': '↓',
+    'Space': '空格', 'Escape': 'Esc', 'Enter': '回车', 'Tab': 'Tab',
+    'Backspace': '退格', 'Delete': 'Del', 'Insert': 'Ins',
+    'Home': 'Home', 'End': 'End', 'PageUp': 'PgUp', 'PageDown': 'PgDn',
+    'ControlLeft': '左Ctrl', 'ControlRight': '右Ctrl',
+    'ShiftLeft': '左Shift', 'ShiftRight': '右Shift',
+    'AltLeft': '左Alt', 'AltRight': '右Alt',
+    'MetaLeft': '左Meta', 'MetaRight': '右Meta',
+    'CapsLock': 'CapsLock',
+  };
+  if (special[code]) return special[code];
+  if (code.startsWith('Key')) return code.slice(3);
+  if (code.startsWith('Digit')) return code.slice(5);
+  if (code.startsWith('Numpad')) return '数字' + code.slice(6);
+  if (/^F\d+$/.test(code)) return code;
+  return code;
+}
+
+/* ======================= 渲染键位列表 ======================= */
+
+const keybindList = document.getElementById('keybindList');
+
+function renderKeybindList() {
+  if (!keybindList) return;
+  keybindList.innerHTML = '';
+  Object.keys(DEFAULT_KEYBINDS).forEach((action) => {
+    const row = document.createElement('div');
+    row.className = 'keybind-row';
+
+    const label = document.createElement('span');
+    label.className = 'keybind-label';
+    label.textContent = ACTION_LABELS[action] || action;
+
+    const btn = document.createElement('button');
+    btn.className = 'keybind-btn';
+    btn.dataset.action = action;
+    btn.type = 'button';
+
+    if (state.capturingAction === action) {
+      btn.classList.add('capturing');
+      btn.textContent = '按下按键…';
+    } else {
+      btn.textContent = formatKey(keybinds[action]);
+    }
+
+    btn.addEventListener('click', () => {
+      state.capturingAction = action;
+      renderKeybindList();
+    });
+
+    row.appendChild(label);
+    row.appendChild(btn);
+    keybindList.appendChild(row);
+  });
+}
+
+/* ======================= 渲染主题选项 ======================= */
+
+const themeOptions = document.getElementById('themeOptions');
+
+function renderThemeOptions() {
+  if (!themeOptions) return;
+  themeOptions.querySelectorAll('.theme-option').forEach((opt) => {
+    if (opt.dataset.theme === state.theme) opt.classList.add('selected');
+    else opt.classList.remove('selected');
+  });
+}
+
+if (themeOptions) {
+  themeOptions.querySelectorAll('.theme-option').forEach((opt) => {
+    opt.addEventListener('click', () => {
+      const name = opt.dataset.theme;
+      if (!THEME_DATA[name]) return;
+      state.theme = name;
+      document.body.dataset.theme = name;
+      saveTheme(name);
+      renderThemeOptions();
+    });
+  });
+}
+
+/* ======================= 捕获键位 ======================= */
+
+function captureKeyForAction(code) {
+  const action = state.capturingAction;
+  if (!action) return;
+
+  if (code === 'Escape') {
+    state.capturingAction = null;
+    renderKeybindList();
+    return;
+  }
+
+  // 检查冲突
+  const conflict = Object.keys(keybinds).find(
+    (act) => keybinds[act] === code && act !== action
+  );
+  if (conflict) {
+    showToast(`该键已被「${ACTION_LABELS[conflict]}」占用`);
+    return;
+  }
+
+  keybinds[action] = code;
+  state.capturingAction = null;
+  saveKeybinds();
+  renderKeybindList();
+}
+
+/* ======================= 设置面板开关 ======================= */
+
+const settingsFab = document.getElementById('settingsFab');
+const settingsPanel = document.getElementById('settingsPanel');
+const settingsBackdrop = document.getElementById('settingsBackdrop');
+const settingsClose = document.getElementById('settingsClose');
+const resetKeysBtn = document.getElementById('resetKeys');
+
+function openSettings() {
+  if (state.settingsOpen) return;
+  state.settingsOpen = true;
+
+  // 打开设置时自动暂停游戏（如果正在玩）
+  if (!state.paused && !state.gameOver && state.started) {
+    pauseGame();
+  }
+
+  state.capturingAction = null;
+  renderKeybindList();
+  renderThemeOptions();
+
+  settingsBackdrop.classList.add('show');
+  settingsPanel.classList.add('show');
+}
+
+function closeSettings() {
+  if (!state.settingsOpen) return;
+  state.settingsOpen = false;
+  state.capturingAction = null;
+  settingsBackdrop.classList.remove('show');
+  settingsPanel.classList.remove('show');
+}
+
+settingsFab.addEventListener('click', () => {
+  getAudioCtx();
+  openSettings();
+});
+settingsClose.addEventListener('click', closeSettings);
+settingsBackdrop.addEventListener('click', closeSettings);
+
+if (resetKeysBtn) {
+  resetKeysBtn.addEventListener('click', () => {
+    keybinds = { ...DEFAULT_KEYBINDS };
+    saveKeybinds();
+    state.capturingAction = null;
+    renderKeybindList();
+    showToast('已恢复默认键位');
+  });
+}
+
+/* ============================ UI 引用 ============================ */
+
 const scoreEl = document.getElementById('scoreEl');
 const bestEl = document.getElementById('bestEl');
 const linesEl = document.getElementById('linesEl');
@@ -961,7 +1408,7 @@ function resetLockDelay() {
   }
 }
 
-/* -------- 暂停 / 继续 -------- */
+/* ======================= 暂停 / 继续 ======================= */
 
 function pauseGame() {
   if (state.paused || state.gameOver) return;
@@ -987,7 +1434,7 @@ function togglePause() {
   else pauseGame();
 }
 
-/* -------- 核心操作 -------- */
+/* ======================= 核心操作 ======================= */
 
 function move(dir) {
   const p = state.current;
@@ -1208,6 +1655,67 @@ function restart() {
   lastTime = performance.now();
 }
 
+/* ============================ 游戏逻辑基础 ============================ */
+
+function createBoard() { return Array.from({ length: ROWS }, () => new Array(COLS).fill(null)); }
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function refillQueue() {
+  while (state.queue.length < 6) {
+    if (!bag.length) bag = shuffle(TYPES.slice());
+    state.queue.push(bag.pop());
+  }
+}
+function rotateMatrix(m, dir) {
+  const N = m.length;
+  const out = Array.from({ length: N }, () => new Array(N).fill(0));
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      if (dir > 0) out[x][N - 1 - y] = m[y][x];
+      else out[N - 1 - x][y] = m[y][x];
+    }
+  }
+  return out;
+}
+function createPiece(type) {
+  const matrix = SHAPES[type].map((row) => row.slice());
+  const w = matrix.length;
+  return { type, matrix, x: Math.floor((COLS - w) / 2), y: 0, rot: 0 };
+}
+function collide(matrix, px, py) {
+  const N = matrix.length;
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      if (!matrix[y][x]) continue;
+      const bx = px + x, by = py + y;
+      if (bx < 0 || bx >= COLS || by >= ROWS) return true;
+      if (by >= 0 && state.board[by][bx]) return true;
+    }
+  }
+  return false;
+}
+function gravityForLevel(level) {
+  const table = [1000, 850, 720, 600, 490, 400, 320, 250, 190, 140, 100, 80, 65, 55, 45];
+  return table[Math.min(level - 1, table.length - 1)];
+}
+function checkTSpin(piece) {
+  const corners = [
+    [piece.x, piece.y], [piece.x + 2, piece.y],
+    [piece.x, piece.y + 2], [piece.x + 2, piece.y + 2],
+  ];
+  let occupied = 0;
+  for (const [cx, cy] of corners) {
+    if (cx < 0 || cx >= COLS || cy < 0 || cy >= ROWS) occupied++;
+    else if (state.board[cy][cx]) occupied++;
+  }
+  return occupied >= 3;
+}
+
 /* ============================ 输入控制 ============================ */
 
 const keys = { left: false, right: false, down: false };
@@ -1238,52 +1746,100 @@ function updateInput(dt) {
   } else { d.held = false; d.timer = 0; }
 }
 
-function pressKey(code) {
-  if (!code) return;
-  if (code === 'KeyR') { restart(); return; }
-  if (code === 'KeyP' || code === 'Escape') { togglePause(); return; }
-  if (state.paused) return;
-  if (state.gameOver) return;
+/**
+ * 根据按键 action 执行对应操作
+ */
+function performAction(action) {
+  if (!action) return;
 
-  switch (code) {
-    case 'ArrowLeft':
-      if (!keys.left) { keys.left = true; move(-1); repeat.left = { held: true, timer: 0, fired: false }; }
+  // 这两个动作在任何状态下都可以用
+  if (action === 'restart') { restart(); return; }
+  if (action === 'pause') { togglePause(); return; }
+
+  // 其他动作仅在游戏中生效
+  if (state.paused || state.gameOver) return;
+
+  switch (action) {
+    case 'moveLeft':
+      if (!keys.left) {
+        keys.left = true;
+        move(-1);
+        repeat.left = { held: true, timer: 0, fired: false };
+      }
       break;
-    case 'ArrowRight':
-      if (!keys.right) { keys.right = true; move(1); repeat.right = { held: true, timer: 0, fired: false }; }
+    case 'moveRight':
+      if (!keys.right) {
+        keys.right = true;
+        move(1);
+        repeat.right = { held: true, timer: 0, fired: false };
+      }
       break;
-    case 'ArrowDown':
-      if (!keys.down) { keys.down = true; repeat.down = { held: false, timer: 0 }; }
+    case 'softDrop':
+      if (!keys.down) {
+        keys.down = true;
+        repeat.down = { held: false, timer: 0 };
+      }
       break;
-    case 'ArrowUp':
-    case 'KeyX': rotate(1); break;
-    case 'KeyZ':
-    case 'ControlLeft':
-    case 'ControlRight': rotate(-1); break;
-    case 'Space': hardDrop(); break;
-    case 'KeyC': doHold(); break;
+    case 'rotateCW':  rotate(1); break;
+    case 'rotateCCW': rotate(-1); break;
+    case 'hardDrop':  hardDrop(); break;
+    case 'hold':      doHold(); break;
   }
 }
 
-function releaseKey(code) {
-  if (!code) return;
-  switch (code) {
-    case 'ArrowLeft': keys.left = false; break;
-    case 'ArrowRight': keys.right = false; break;
-    case 'ArrowDown': keys.down = false; break;
+function releaseAction(action) {
+  if (!action) return;
+  switch (action) {
+    case 'moveLeft':  keys.left = false;  break;
+    case 'moveRight': keys.right = false; break;
+    case 'softDrop':  keys.down = false;  break;
   }
+}
+
+function getActionByCode(code) {
+  for (const action of Object.keys(keybinds)) {
+    if (keybinds[action] === code) return action;
+  }
+  return null;
 }
 
 function handleKeyDown(e) {
   const code = e.code;
-  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyC','KeyX','KeyZ','KeyP','Escape'].indexOf(code) !== -1) {
+
+  // 1. 设置面板中的键位捕获优先
+  if (state.capturingAction) {
+    e.preventDefault();
+    captureKeyForAction(code);
+    return;
+  }
+
+  // 2. 设置面板打开时，Esc 关闭
+  if (state.settingsOpen) {
+    if (code === 'Escape') {
+      e.preventDefault();
+      closeSettings();
+    }
+    return;
+  }
+
+  // 3. 常规按键处理
+  const action = getActionByCode(code);
+  if (!action) return;
+
+  // 阻止浏览器默认行为（方向键、空格等）
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','Tab'].indexOf(code) !== -1
+      || code.startsWith('Arrow')) {
     e.preventDefault();
   }
+
   if (e.repeat) return;
-  pressKey(code);
+  performAction(action);
 }
 
-function handleKeyUp(e) { releaseKey(e.code); }
+function handleKeyUp(e) {
+  const action = getActionByCode(e.code);
+  if (action) releaseAction(action);
+}
 
 window.addEventListener('keydown', handleKeyDown);
 window.addEventListener('keyup', handleKeyUp);
@@ -1293,23 +1849,24 @@ window.addEventListener('blur', () => {
   document.querySelectorAll('.ctrl-btn.pressed').forEach((b) => b.classList.remove('pressed'));
 });
 
-/* -------- 屏幕按钮绑定 -------- */
+/* ============================ 屏幕按钮绑定 ============================ */
+
 function bindControls() {
-  const buttons = document.querySelectorAll('.ctrl-btn[data-key]');
+  const buttons = document.querySelectorAll('.ctrl-btn[data-action]');
   buttons.forEach((btn) => {
-    const key = btn.dataset.key;
-    if (!key) return;
+    const action = btn.dataset.action;
+    if (!action) return;
 
     btn.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       try { btn.setPointerCapture(e.pointerId); } catch (err) {}
       btn.classList.add('pressed');
-      pressKey(key);
+      performAction(action);
     });
 
     const release = () => {
       btn.classList.remove('pressed');
-      releaseKey(key);
+      releaseAction(action);
     };
 
     btn.addEventListener('pointerup', release);
@@ -1330,8 +1887,7 @@ function resize() {
     const vh = window.innerHeight;
     const vw = window.innerWidth;
 
-    // 顶部横条、底部横条、按钮区、页面边距、浮动按钮留白
-    const topBar = 96;      // 含消息面板在内
+    const topBar = 96;
     const bottomBar = 92;
     const controlsH = 130;
     const margins = 40;
@@ -1364,9 +1920,7 @@ function resize() {
 }
 
 window.addEventListener('resize', resize);
-window.addEventListener('orientationchange', () => {
-  setTimeout(resize, 250);
-});
+window.addEventListener('orientationchange', () => setTimeout(resize, 250));
 
 /* ============================ 主循环与初始化 ============================ */
 
@@ -1382,7 +1936,6 @@ function loop(now) {
       if (now - state.clearing.start >= CLEAR_DURATION) finishClearing();
     } else if (state.started && !state.gameOver) {
       updateInput(dt);
-
       if (state.current) {
         if (state.grounded && state.lockTimer > 0) {
           state.lockTimer -= dt;
@@ -1406,6 +1959,7 @@ function loop(now) {
 
 function init() {
   buildSprites();
+  loadSettings();      // 加载主题和键位
   state.board = createBoard();
   state.dropInterval = gravityForLevel(1);
   try {
@@ -1415,6 +1969,8 @@ function init() {
   updateUI();
 
   bindControls();
+  renderThemeOptions();
+  renderKeybindList();
   resize();
 
   restart();
